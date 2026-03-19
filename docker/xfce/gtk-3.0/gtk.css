@@ -1,0 +1,80 @@
+/* Screenbox dark overlay -- applied on top of Arc-Dark */
+
+/* Window backgrounds: near-black */
+.background, window {
+    background-color: #111620;
+}
+
+/* Header bars (title bars when CSD) */
+headerbar, .titlebar {
+    background-color: #0f1318;
+    border-color: #1c2030;
+    color: #d0d4dc;
+}
+
+/* Menus */
+menu, .menu, .popup {
+    background-color: #111620;
+    border-color: #1c2030;
+    color: #d0d4dc;
+}
+menu menuitem:hover, .menu menuitem:hover {
+    background-color: #1a3a7a;
+}
+
+/* Sidebars / tree views */
+.sidebar, treeview, list, .view {
+    background-color: #0f1318;
+    color: #d0d4dc;
+}
+treeview:selected, list row:selected, .view:selected {
+    background-color: #1a3a7a;
+}
+
+/* Text entries */
+entry, textview, textview text {
+    background-color: #0a0e14;
+    color: #d0d4dc;
+    border-color: #1c2030;
+}
+
+/* Buttons */
+button {
+    background-image: none;
+    background-color: #1c2030;
+    border-color: #252a3a;
+    color: #d0d4dc;
+}
+button:hover {
+    background-color: #252a3a;
+    border-color: #1a3a7a;
+}
+button:active, button:checked {
+    background-color: #1a3a7a;
+}
+
+/* Scrollbars */
+scrollbar slider {
+    background-color: #1c2030;
+    border-radius: 3px;
+}
+scrollbar slider:hover {
+    background-color: #1a3a7a;
+}
+
+/* Tooltips */
+tooltip, tooltip.background {
+    background-color: #0a0e14;
+    color: #d0d4dc;
+    border: 1px solid #1c2030;
+}
+
+/* Notebook tabs */
+notebook tab {
+    background-color: #0f1318;
+    border-color: #1c2030;
+}
+notebook tab:checked {
+    background-color: #111620;
+    border-bottom-color: #1a3a7a;
+}

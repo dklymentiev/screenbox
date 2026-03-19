@@ -1,0 +1,26 @@
+[org.mate.interface]
+gtk-theme='Yaru-sage-dark'
+icon-theme='Yaru-sage-dark'
+font-name='Liberation Sans 10'
+monospace-font-name='Liberation Mono 11'
+
+[org.mate.Marco.general]
+theme='Yaru-sage-dark'
+titlebar-font='Liberation Sans Bold 10'
+num-workspaces=1
+
+[org.mate.background]
+picture-filename='/home/screenbox/.config/screenbox-wallpaper.png'
+picture-options='stretched'
+primary-color='#0a0e14'
+show-desktop-icons=true
+
+[org.mate.caja.desktop]
+computer-icon-visible=false
+trash-icon-visible=false
+home-icon-visible=false
+volumes-visible=false
+network-icon-visible=false
+
+[org.mate.panel]
+default-layout='screenbox'

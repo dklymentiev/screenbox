@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<channel name="xfce4-terminal" version="1.0">
+  <property name="color-background" type="string" value="#1a1a2e2e3c3c"/>
+  <property name="color-foreground" type="string" value="#e0e0e0e0e0e0"/>
+  <property name="color-use-theme" type="bool" value="false"/>
+  <property name="font-name" type="string" value="Liberation Mono 11"/>
+  <property name="font-use-system" type="bool" value="false"/>
+  <property name="scrolling-unlimited" type="bool" value="true"/>
+</channel>

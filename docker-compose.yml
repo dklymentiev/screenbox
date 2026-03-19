@@ -1,0 +1,93 @@
+# Screenbox -- Virtual Desktop Manager
+# Setup: ./setup.sh (generates .env + builds desktop image)
+# Start: docker compose up -d
+# Dashboard: http://localhost:16000
+# MCP: http://localhost:8080/mcp
+
+services:
+  screenbox-desktop-build:
+    build:
+      context: docker
+      dockerfile: Dockerfile
+    image: screenbox:latest
+    entrypoint: ["echo", "Desktop image built"]
+    profiles: ["build"]
+
+  screenbox-socket-proxy:
+    image: screenbox-docker-proxy:latest
+    build:
+      context: docker
+      dockerfile: proxy/Dockerfile
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    networks:
+      - screenbox
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          memory: 128m
+          cpus: "0.25"
+
+  screenbox-mcp:
+    depends_on:
+      - screenbox-socket-proxy
+    build:
+      context: .
+      dockerfile: docker/mcp/Dockerfile
+    ports:
+      - "127.0.0.1:8080:8080"
+    volumes:
+      - screenbox-data:/data/screenbox
+    environment:
+      - SCREENBOX_TRANSPORT=both
+      - SCREENBOX_HOST=0.0.0.0
+      - SCREENBOX_PORT=8080
+      - SCREENBOX_BASE_DIR=/data/screenbox
+      - SCREENBOX_DOCKER_NETWORK=screenbox_screenbox
+      - SCREENBOX_DATA_VOLUME=${COMPOSE_PROJECT_NAME:-screenbox}_screenbox-data
+      - SCREENBOX_API_TOKEN=${SCREENBOX_API_TOKEN:?Run ./setup.sh first}
+      - DOCKER_HOST=tcp://screenbox-socket-proxy:2375
+      - SCREENBOX_ADMIN_KEY=${SCREENBOX_ADMIN_KEY:-}
+    networks:
+      - screenbox
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          memory: 512m
+          cpus: "1.0"
+
+  screenbox-dashboard:
+    container_name: screenbox-dashboard
+    depends_on:
+      - screenbox-mcp
+    build:
+      context: dashboard
+      dockerfile: Dockerfile
+    ports:
+      - "127.0.0.1:16000:16000"
+    volumes:
+      - screenbox-data:/data/screenbox
+    environment:
+      - SCREENBOX_DASHBOARD_HOST=0.0.0.0
+      - SCREENBOX_DASHBOARD_PORT=16000
+      - SCREENBOX_DESKTOPS_DIR=/data/screenbox/desktops
+      - SCREENBOX_DOCKER_NETWORK=screenbox_screenbox
+      - SCREENBOX_API_TOKEN=${SCREENBOX_API_TOKEN:?Run ./setup.sh first}
+      - SCREENBOX_DESKTOP_IMAGE=${SCREENBOX_DESKTOP_IMAGE:-screenbox:latest}
+      - SCREENBOX_MCP_API_URL=http://screenbox-mcp:8080
+    networks:
+      - screenbox
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          memory: 256m
+          cpus: "0.5"
+
+networks:
+  screenbox:
+
+volumes:
+  screenbox-data:

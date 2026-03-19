@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Screenbox</title>
+<style>
+* { margin: 0; padding: 0; }
+body { background: #0a0e14; overflow: hidden; font-family: -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif; }
+#screen { width: 100vw; height: 100vh; }
+#status {
+  position: fixed; top: 8px; right: 12px; z-index: 100;
+  font-family: -apple-system, monospace; font-size: 12px;
+  padding: 4px 10px; border-radius: 4px; opacity: 0.8;
+}
+#expires {
+  position: fixed; bottom: 8px; right: 12px; z-index: 100;
+  font-family: monospace; font-size: 11px;
+  padding: 4px 10px; border-radius: 4px;
+  background: rgba(255,255,255,0.05); color: #606878;
+  opacity: 0.6;
+}
+.connected { background: rgba(63,185,80,0.3); color: #3fb950; }
+.connecting { background: rgba(255,152,0,0.3); color: #ff9800; }
+.disconnected { background: rgba(255,50,50,0.3); color: #f85149; }
+#error-overlay {
+  display: none;
+  position: fixed; inset: 0; z-index: 200;
+  background: #0a0e14;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+}
+#error-overlay.visible { display: flex; }
+#error-overlay .icon {
+  width: 48px; height: 48px;
+  border: 2px solid #1a3a7a;
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+}
+#error-overlay .icon svg { width: 20px; height: 20px; }
+#error-overlay h2 {
+  color: #d0d4dc; font-size: 16px; font-weight: 400;
+  letter-spacing: 1px;
+}
+#error-overlay p {
+  color: #606878; font-size: 12px; font-weight: 300;
+  letter-spacing: 0.5px;
+}
+</style>
+</head>
+<body>
+<div id="status" class="connecting">Validating...</div>
+<div id="expires"></div>
+<div id="screen"></div>
+<div id="error-overlay">
+  <div class="icon">
+    <svg viewBox="0 0 24 24" fill="none" stroke="#1a3a7a" stroke-width="2" stroke-linecap="round">
+      <circle cx="12" cy="12" r="10"/>
+      <line x1="12" y1="8" x2="12" y2="12"/>
+      <line x1="12" y1="16" x2="12.01" y2="16"/>
+    </svg>
+  </div>
+  <h2 id="error-title">Link Expired</h2>
+  <p id="error-detail">This share link is no longer valid</p>
+</div>
+
+<script type="module">
+  import RFB from '/novnc/core/rfb.js';
+
+  // Extract token from URL path: /s/{token}
+  const pathParts = location.pathname.split('/');
+  const token = pathParts[pathParts.length - 1] || pathParts[pathParts.length - 2];
+
+  const status = document.getElementById('status');
+  const screenEl = document.getElementById('screen');
+  const expiresEl = document.getElementById('expires');
+  let rfb = null;
+  let desktopId = '';
+  let expiresAt = 0;
+  let _expiryTimer = null;
+
+  function showError(title, detail) {
+    document.getElementById('error-title').textContent = title;
+    document.getElementById('error-detail').textContent = detail;
+    document.getElementById('error-overlay').classList.add('visible');
+    status.style.display = 'none';
+    expiresEl.style.display = 'none';
+  }
+
+  function updateExpiry() {
+    if (!expiresAt) return;
+    const remaining = Math.max(0, Math.floor(expiresAt - Date.now() / 1000));
+    if (remaining <= 0) {
+      showError('Link Expired', 'This share link has expired');
+      if (rfb) { try { rfb.disconnect(); } catch(e) {} }
+      if (_expiryTimer) clearInterval(_expiryTimer);
+      return;
+    }
+    const min = Math.floor(remaining / 60);
+    const sec = remaining % 60;
+    expiresEl.textContent = min + ':' + String(sec).padStart(2, '0') + ' remaining';
+  }
+
+  async function init() {
+    if (!token) {
+      showError('Invalid Link', 'No share token found');
+      return;
+    }
+
+    // Validate token
+    try {
+      const resp = await fetch('/api/desktop/share/validate?token=' + encodeURIComponent(token));
+      if (!resp.ok) {
+        const err = await resp.json().catch(() => ({}));
+        showError('Link Invalid', err.error || 'This share link is no longer valid');
+        return;
+      }
+      const data = await resp.json();
+      desktopId = data.desktop_id;
+      expiresAt = data.expires_at;
+      document.title = 'Screenbox: ' + desktopId + ' [VIEW]';
+
+      if (data.state !== 'running') {
+        showError('Desktop Offline', 'Desktop "' + desktopId + '" is not running (' + data.state + ')');
+        return;
+      }
+    } catch(e) {
+      showError('Connection Error', 'Could not validate share link');
+      return;
+    }
+
+    // Start expiry countdown
+    updateExpiry();
+    _expiryTimer = setInterval(updateExpiry, 1000);
+
+    // Connect VNC (view-only)
+    connect();
+  }
+
+  function buildWsUrl() {
+    const proto = location.protocol === 'https:' ? 'wss:' : 'ws:';
+    const port = location.port ? ':' + location.port : '';
+    return proto + '//' + location.hostname + port + '/share-vnc/' + token;
+  }
+
+  function connect() {
+    if (rfb) { try { rfb.disconnect(); } catch(e) {} }
+    screenEl.innerHTML = '';
+
+    status.className = 'connecting';
+    status.textContent = 'Connecting...';
+
+    rfb = new RFB(screenEl, buildWsUrl());
+    rfb.viewOnly = true;
+    rfb.scaleViewport = true;
+    rfb.resizeSession = false;
+    rfb.showDotCursor = false;
+    rfb.background = '#0a0e14';
+
+    rfb.addEventListener('connect', () => {
+      status.className = 'connected';
+      status.textContent = desktopId + ' [VIEW ONLY]';
+      setTimeout(() => { status.style.opacity = '0.3'; }, 3000);
+    });
+
+    rfb.addEventListener('disconnect', (e) => {
+      rfb = null;
+      if (!e.detail.clean) {
+        showError('Disconnected', 'The desktop session has ended');
+      }
+    });
+
+    rfb.addEventListener('credentialsrequired', () => {
+      rfb.sendCredentials({ password: '' });
+    });
+  }
+
+  // Auto-hide status on idle
+  document.addEventListener('mousemove', () => {
+    status.style.opacity = '0.8';
+    expiresEl.style.opacity = '0.6';
+    clearTimeout(window._ht);
+    window._ht = setTimeout(() => {
+      status.style.opacity = '0.3';
+      expiresEl.style.opacity = '0.3';
+    }, 2000);
+  });
+
+  init();
+</script>
+</body>
+</html>

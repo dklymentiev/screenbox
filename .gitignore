@@ -1,0 +1,56 @@
+
+__pycache__/
+*.pyc
+.pytest_cache/
+*.egg-info/
+.mypy_cache/
+.ruff_cache/
+
+# Coverage
+.coverage
+htmlcov/
+
+# IDE
+.idea/
+.vscode/
+*.swp
+
+# Internal working files (server-specific configs, memory markers, etc.)
+.local/
+MEMORY.md
+CLAUDE.md
+
+# Environment
+.env
+.env.local
+
+# MCP client config (contains API token)
+.mcp.json
+
+# Server-specific compose overrides
+docker-compose.override.yml
+docker-compose.prod.yml
+
+# Data
+data/
+logs/
+
+# Test artifacts
+tests/test-results/
+
+# Binary build artifacts
+docker/**/*.deb
+
+# Experimental test environments
+docker/kasmvnc-test/
+docker/budgie-test/
+docker/xfce-test/
+docker/xfce4-test/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Build artifacts
+.code-index-state
+docs/product-description.md

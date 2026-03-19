@@ -1,0 +1,59 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.egg-info/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# Tests
+tests/
+.coverage
+htmlcov/
+
+# Git
+.git/
+.gitignore
+
+# IDE
+.idea/
+.vscode/
+*.swp
+
+# Data
+data/
+logs/
+.env
+.env.local
+.local/
+.mcp.json
+
+# Docs
+docs/
+*.md
+!README.md
+LICENSE
+
+# Compose / Build
+docker-compose.yml
+docker-compose.override.yml
+docker-compose.prod.yml
+bake.hcl
+.env.example
+
+# Build artifacts
+docker/**/*.deb
+docker/kasmvnc-test/
+docker/budgie-test/
+docker/xfce-test/
+docker/xfce4-test/
+
+# Internal
+.code-index-state
+CLAUDE.md
+MEMORY.md
+
+# OS
+.DS_Store
+Thumbs.db

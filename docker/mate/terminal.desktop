@@ -1,0 +1,7 @@
+[Desktop Entry]
+Type=Application
+Name=Terminal
+Exec=mate-terminal
+Icon=utilities-terminal
+Terminal=false
+Categories=System;TerminalEmulator;

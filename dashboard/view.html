@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Screenbox</title>
+<style>
+* { margin: 0; padding: 0; }
+body { background: #0a0e14; overflow: hidden; font-family: -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif; }
+#screen { width: 100vw; height: 100vh; }
+#status {
+  position: fixed; top: 8px; right: 12px; z-index: 100;
+  font-family: -apple-system, monospace; font-size: 12px;
+  padding: 4px 10px; border-radius: 4px; opacity: 0.8;
+}
+#back {
+  position: fixed; top: 8px; left: 12px; z-index: 100;
+  font-family: -apple-system, monospace; font-size: 12px;
+  padding: 4px 10px; border-radius: 4px; opacity: 0.6;
+  background: rgba(255,255,255,0.1); color: #8b949e;
+  cursor: pointer; text-decoration: none;
+}
+#back:hover { opacity: 0.9; }
+.connected { background: rgba(63,185,80,0.3); color: #3fb950; }
+.connecting { background: rgba(255,152,0,0.3); color: #ff9800; }
+.disconnected { background: rgba(255,50,50,0.3); color: #f85149; }
+#disconnect-overlay {
+  display: none;
+  position: fixed; inset: 0; z-index: 200;
+  background: #0a0e14;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+}
+#disconnect-overlay.visible { display: flex; }
+#disconnect-overlay .icon {
+  width: 48px; height: 48px;
+  border: 2px solid #1a3a7a;
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+}
+#disconnect-overlay .icon svg { width: 20px; height: 20px; }
+#disconnect-overlay h2 {
+  color: #d0d4dc; font-size: 16px; font-weight: 400;
+  letter-spacing: 1px;
+}
+#disconnect-overlay p {
+  color: #606878; font-size: 12px; font-weight: 300;
+  letter-spacing: 0.5px;
+}
+#disconnect-overlay .btn-reconnect {
+  margin-top: 8px;
+  background: none;
+  border: 1px solid #1a3a7a;
+  color: #d0d4dc;
+  padding: 8px 24px;
+  border-radius: 4px;
+  font-size: 12px;
+  letter-spacing: 1px;
+  cursor: pointer;
+  font-weight: 300;
+  transition: background 0.15s, border-color 0.15s;
+}
+#disconnect-overlay .btn-reconnect:hover {
+  background: rgba(26,58,122,0.3);
+  border-color: #2a5aaa;
+}
+#disconnect-overlay .btn-back {
+  background: none; border: none;
+  color: #606878; font-size: 11px;
+  cursor: pointer; letter-spacing: 0.5px;
+  text-decoration: none; font-weight: 300;
+}
+#disconnect-overlay .btn-back:hover { color: #8b949e; }
+</style>
+</head>
+<body>
+<a id="back" href="/">back</a>
+<div id="status" class="connecting">Connecting...</div>
+<div id="screen"></div>
+<div id="disconnect-overlay">
+  <div class="icon">
+    <svg viewBox="0 0 24 24" fill="none" stroke="#1a3a7a" stroke-width="2" stroke-linecap="round">
+      <line x1="1" y1="1" x2="23" y2="23"/>
+      <path d="M16.72 11.06A10.94 10.94 0 0 1 19 12.55"/>
+      <path d="M5 12.55a10.94 10.94 0 0 1 5.17-2.39"/>
+      <path d="M10.71 5.05A16 16 0 0 1 22.56 9"/>
+      <path d="M1.42 9a15.91 15.91 0 0 1 4.7-2.88"/>
+      <path d="M8.53 16.11a6 6 0 0 1 6.95 0"/>
+      <line x1="12" y1="20" x2="12.01" y2="20"/>
+    </svg>
+  </div>
+  <h2>Session Disconnected</h2>
+  <p id="disconnect-reason">The desktop session has ended</p>
+  <button class="btn-reconnect" onclick="doReconnect()">Reconnect</button>
+  <a class="btn-back" href="/">Back to dashboard</a>
+</div>
+
+<script type="module">
+  import RFB from '/novnc/core/rfb.js';
+
+  const params = new URLSearchParams(location.search);
+  const desktopId = params.get('id') || 'unknown';
+  document.title = 'Screenbox: ' + desktopId;
+
+  const status = document.getElementById('status');
+  const screenEl = document.getElementById('screen');
+  let rfb = null;
+  let _healthInterval = null;
+
+  function buildWsUrl() {
+    const proto = location.protocol === 'https:' ? 'wss:' : 'ws:';
+    const port = location.port ? ':' + location.port : '';
+    return proto + '//' + location.hostname + port + '/vnc/' + desktopId;
+  }
+
+  function connect() {
+    if (rfb) { try { rfb.disconnect(); } catch(e) {} }
+    screenEl.innerHTML = '';
+
+    status.className = 'connecting';
+    status.textContent = 'Connecting...';
+    status.style.opacity = '0.8';
+
+    rfb = new RFB(screenEl, buildWsUrl());
+    rfb.scaleViewport = true;
+    rfb.resizeSession = false;
+    rfb.showDotCursor = false;
+    rfb.background = '#0a0e14';
+
+    rfb.addEventListener('connect', () => {
+      status.className = 'connected';
+      status.textContent = desktopId + ' [LIVE]';
+      document.title = 'Screenbox: ' + desktopId + ' [LIVE]';
+      setTimeout(() => { status.style.opacity = '0.3'; }, 3000);
+      startHealthCheck();
+    });
+
+    rfb.addEventListener('disconnect', (e) => {
+      rfb = null;
+      if (!e.detail.clean) {
+        showDisconnect('Connection lost');
+      }
+    });
+
+    rfb.addEventListener('credentialsrequired', () => {
+      rfb.sendCredentials({ password: '' });
+    });
+  }
+
+  function showDisconnect(reason) {
+    const overlay = document.getElementById('disconnect-overlay');
+    if (reason) document.getElementById('disconnect-reason').textContent = reason;
+    overlay.classList.add('visible');
+    status.style.display = 'none';
+    document.getElementById('back').style.display = 'none';
+    if (_healthInterval) { clearInterval(_healthInterval); _healthInterval = null; }
+  }
+
+  function startHealthCheck() {
+    if (_healthInterval) clearInterval(_healthInterval);
+    _healthInterval = setInterval(async () => {
+      try {
+        const resp = await fetch('/api/desktops');
+        const desktops = await resp.json();
+        const mine = desktops.find(d => d.id === desktopId);
+        if (!mine) {
+          showDisconnect('Desktop "' + desktopId + '" no longer exists');
+        } else if (mine.state !== 'running') {
+          showDisconnect('Desktop stopped (' + mine.state + ')');
+        }
+      } catch(e) {}
+    }, 5000);
+  }
+
+  // Auto-hide UI on idle
+  document.addEventListener('mousemove', () => {
+    status.style.opacity = '0.8';
+    document.getElementById('back').style.opacity = '0.6';
+    clearTimeout(window._ht);
+    window._ht = setTimeout(() => {
+      status.style.opacity = '0.3';
+      document.getElementById('back').style.opacity = '0.2';
+    }, 2000);
+  });
+
+  // Expose for onclick
+  window.doReconnect = function() {
+    document.getElementById('disconnect-overlay').classList.remove('visible');
+    status.style.display = '';
+    document.getElementById('back').style.display = '';
+    connect();
+  };
+
+  connect();
+</script>
+</body>
+</html>

@@ -1,0 +1,63 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "screenbox-mcp"
+version = "0.14.0"
+description = "Virtual desktops for AI agents via MCP"
+readme = "README.md"
+license = "AGPL-3.0-only"
+requires-python = ">=3.10"
+authors = [
+    { name = "Dmytro Klymentiev" },
+]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Developers",
+    "Topic :: Software Development :: Testing",
+    "Topic :: System :: Emulators",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "License :: OSI Approved :: GNU Affero General Public License v3",
+    "Operating System :: POSIX :: Linux",
+]
+dependencies = [
+    "mcp>=1.0.0",
+    "Pillow>=10.0.0",
+    "requests>=2.32.0",
+    "numpy>=1.24.0",
+    "opencv-python-headless>=4.8.0",
+    "pytesseract>=0.3.10",
+    "pyyaml>=6.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.0",
+    "ruff>=0.1.0",
+]
+
+[project.urls]
+Homepage = "https://github.com/dklymentiev/screenbox"
+Documentation = "https://github.com/dklymentiev/screenbox#readme"
+Issues = "https://github.com/dklymentiev/screenbox/issues"
+
+[project.scripts]
+screenbox-mcp = "screenbox.server:main"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/screenbox"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+asyncio_mode = "strict"
+
+[tool.ruff]
+target-version = "py310"
+line-length = 120
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I"]

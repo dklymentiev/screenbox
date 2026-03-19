@@ -1,0 +1,28 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+.pytest_cache/
+
+# Dev/local
+.local/
+.env
+.env.*
+.mcp.json
+*.log
+
+# Data (runtime, not build)
+data/
+tests/test-results/
+
+# IDE
+.vscode/
+.idea/
+
+# Git
+.git/
+.gitignore
+
+# Docs (not needed in image)
+*.md
+LICENSE

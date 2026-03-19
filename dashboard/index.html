@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Screenbox</title>
+<link rel="stylesheet" href="/static/style.css?v=4">
+</head>
+<body>
+
+<div class="modal-overlay" id="modal">
+  <div class="modal-box">
+    <div class="modal-text" id="modal-text"></div>
+    <div class="modal-buttons">
+      <button onclick="modalCancel()">cancel</button>
+      <button id="modal-confirm" onclick="modalConfirm()">confirm</button>
+    </div>
+  </div>
+</div>
+
+<div class="header">
+  <div class="logo">screenbox <span class="logo-version" id="app-version"></span></div>
+  <div class="ws-status" id="ws-status" title="WebSocket connection"></div>
+  <div class="count" id="count"></div>
+  <button class="btn-toggle-saved" id="btn-saved" onclick="toggleSaved()">show saved</button>
+  <div class="header-right">
+    <div class="sys-stats" id="sys-stats">
+      <div class="sys-stat"><span>CPU</span><div class="sys-bar"><div class="sys-bar-fill" id="sys-cpu" style="width:0%"></div></div><span id="sys-cpu-val">--</span></div>
+      <div class="sys-stat"><span>RAM</span><div class="sys-bar"><div class="sys-bar-fill" id="sys-ram" style="width:0%"></div></div><span id="sys-ram-val">--</span></div>
+      <div class="sys-stat"><span>DISK</span><div class="sys-bar"><div class="sys-bar-fill" id="sys-disk" style="width:0%"></div></div><span id="sys-disk-val">--</span></div>
+    </div>
+    <button class="btn-settings" onclick="toggleSettings()">settings</button>
+  </div>
+</div>
+
+<div id="settings-panel">
+  <h3>settings</h3>
+  <div style="font-size:10px;color:#404858;margin-bottom:10px;letter-spacing:0.3px">changes apply to new desktops only -- running desktops are not affected</div>
+  <div class="settings-grid">
+    <div class="setting-item">
+      <label>port start</label>
+      <input type="number" id="set-port-start" value="16080">
+    </div>
+    <div class="setting-item">
+      <label>port end</label>
+      <input type="number" id="set-port-end" value="16400">
+    </div>
+    <div class="setting-item">
+      <label>max desktops</label>
+      <input type="number" id="set-max-desktops" value="20">
+    </div>
+    <div class="setting-item">
+      <label>memory limit</label>
+      <input type="text" id="set-memory-limit" value="2048m">
+    </div>
+    <div class="setting-item">
+      <label>shm size</label>
+      <input type="text" id="set-shm-size" value="256m">
+    </div>
+    <div class="setting-item">
+      <label>chrome at start</label>
+      <input type="text" id="set-chrome-url" value="none" placeholder="none or URL">
+    </div>
+    <div class="setting-item" style="flex-direction:row;align-self:flex-end;gap:8px;align-items:end">
+      <button class="btn-save" onclick="toggleSettings()" style="background:none">cancel</button>
+      <button class="btn-save" onclick="saveSettings()">save</button>
+    </div>
+  </div>
+</div>
+
+<div class="main-area" id="main-area">
+  <div class="grid" id="grid"></div>
+  <div id="preview-panel">
+    <div id="preview-resize"></div>
+    <div id="preview-header">
+      <span class="title" id="preview-title">--</span>
+      <span class="ctrl-sep"></span>
+      <div class="preview-controls" id="preview-controls">
+        <button class="ctrl-btn" id="ctrl-pause" onclick="previewControl('pause')" title="Pause">||</button>
+        <button class="ctrl-btn" id="ctrl-resume" onclick="previewControl('unpause')" title="Resume" style="display:none">&#9654;</button>
+        <button class="ctrl-btn" id="ctrl-stop" onclick="previewControl('stop')" title="Stop">&#9632;</button>
+        <button class="ctrl-btn" id="ctrl-start" onclick="previewControl('start')" title="Start" style="display:none">&#9654;</button>
+        <span class="ctrl-sep"></span>
+        <button class="ctrl-btn ctrl-rec" id="ctrl-rec" onclick="previewRecord()" title="Record" style="display:none">
+          <span class="rec-dot" id="ctrl-rec-dot"></span><span class="rec-stop">&#9632;</span>
+        </button>
+      </div>
+      <div class="actions">
+        <button class="btn-close" id="preview-close">&times;</button>
+      </div>
+    </div>
+    <div id="preview-toolbar">
+      <button class="mode-btn" id="btn-mode-view" onclick="setVNCMode('view')">view</button>
+      <button class="mode-btn active" id="btn-mode-control" onclick="setVNCMode('control')">control</button>
+      <span class="tab-sep"></span>
+      <button class="mode-btn" id="btn-tab-logs" onclick="setActiveTab('logs')">logs</button>
+      <button class="mode-btn" id="btn-tab-knowledge" onclick="setActiveTab('knowledge')">knowledge</button>
+      <button class="mode-btn" id="btn-tab-recordings" onclick="setActiveTab('recordings')">rec</button>
+      <span id="preview-stats"></span>
+      <span class="toolbar-spacer"></span>
+      <a class="toolbar-link" id="toolbar-fullscreen" href="#" target="_blank">open fullscreen</a>
+    </div>
+    <div id="preview-screen">
+      <span style="color:#2a3040;font-size:12px;letter-spacing:2px">select a desktop</span>
+      <canvas id="click-overlay" width="1" height="1"></canvas>
+    </div>
+    <div id="tab-content-logs"></div>
+    <div id="tab-content-knowledge"></div>
+    <div id="tab-content-recordings"></div>
+  </div>
+</div>
+
+<script src="/static/app.js"></script>
+<script src="/static/logs.js"></script>
+<script src="/static/knowledge.js"></script>
+<script src="/static/recordings.js"></script>
+<script>
+  // Initialize tab modules after load
+  if (SB.logs) SB.logs.init(document.getElementById('tab-content-logs'));
+  if (SB.knowledge) SB.knowledge.init(document.getElementById('tab-content-knowledge'));
+  if (SB.recordings) SB.recordings.init(document.getElementById('tab-content-recordings'));
+</script>
+</body>
+</html>

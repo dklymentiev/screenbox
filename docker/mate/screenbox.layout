@@ -1,0 +1,37 @@
+[Toplevel bottom]
+type=bottom
+monitor=0
+expand=true
+orientation=bottom
+size=28
+
+[Object menu]
+object-type=menu-bar
+toplevel-id=bottom
+position=0
+
+[Object chromium]
+object-type=launcher
+toplevel-id=bottom
+launcher-location=/usr/share/applications/chromium-browser.desktop
+position=1
+
+[Object terminal]
+object-type=launcher
+toplevel-id=bottom
+launcher-location=/usr/share/applications/mate-terminal.desktop
+position=2
+
+[Object window-list]
+object-type=applet
+applet-iid=WnckletFactory::WindowListApplet
+toplevel-id=bottom
+position=3
+right-stick=false
+
+[Object clock]
+object-type=applet
+applet-iid=ClockAppletFactory::ClockApplet
+toplevel-id=bottom
+position=0
+right-stick=true

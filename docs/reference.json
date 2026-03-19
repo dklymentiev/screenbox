@@ -1,0 +1,5670 @@
+{
+  "_generated": "2026-03-19T00:58:09.351908",
+  "_generator": "scripts/gen-docs.py",
+  "package": {
+    "name": "screenbox-mcp",
+    "version": "0.14.0"
+  },
+  "stats": {
+    "files": 47,
+    "lines": 12040,
+    "classes": 25,
+    "functions": 45,
+    "tools": 17,
+    "api_endpoints": 31,
+    "config_vars": 13
+  },
+  "architecture": {
+    "layers": {
+      "core": {
+        "files": [
+          "src/screenbox/__init__.py",
+          "src/screenbox/__main__.py",
+          "src/screenbox/access.py",
+          "src/screenbox/catalog.py",
+          "src/screenbox/events.py",
+          "src/screenbox/globals.py",
+          "src/screenbox/logger.py",
+          "src/screenbox/request_context.py",
+          "src/screenbox/vision.py"
+        ],
+        "total_lines": 1290,
+        "classes": [
+          {
+            "name": "AccessGuard",
+            "line": 27,
+            "doc": "Unified access control for both MCP and HTTP channels.",
+            "methods": [
+              {
+                "name": "current_agent",
+                "line": 50,
+                "doc": "Current authenticated agent for MCP connection."
+              },
+              {
+                "name": "is_authenticated",
+                "line": 55,
+                "doc": ""
+              },
+              {
+                "name": "set_session",
+                "line": 58,
+                "doc": "Set MCP connection-level session (called once on connect)."
+              },
+              {
+                "name": "clear_session",
+                "line": 65,
+                "doc": "Clear MCP session (on disconnect)."
+              },
+              {
+                "name": "authenticate",
+                "line": 71,
+                "doc": "Authenticate agent. Returns session_token or None."
+              },
+              {
+                "name": "validate_session",
+                "line": 84,
+                "doc": "Validate session token. Returns {agent_id, source_ip} or None."
+              },
+              {
+                "name": "check_desktop_access",
+                "line": 91,
+                "doc": "Check if agent can access desktop. Raises ValueError if not."
+              },
+              {
+                "name": "check_desktop_create",
+                "line": 125,
+                "doc": "Check if agent can create desktops."
+              },
+              {
+                "name": "get_agent_desktops",
+                "line": 136,
+                "doc": "Get desktops assigned to agent."
+              },
+              {
+                "name": "auto_assign",
+                "line": 140,
+                "doc": "Auto-assign desktop to agent on create (if authenticated)."
+              }
+            ]
+          },
+          {
+            "name": "EventBus",
+            "line": 17,
+            "doc": "Thread-safe event bus with async subscriber queues.",
+            "methods": [
+              {
+                "name": "subscribe",
+                "line": 24,
+                "doc": "Create a new subscriber queue."
+              },
+              {
+                "name": "unsubscribe",
+                "line": 32,
+                "doc": "Remove a subscriber queue."
+              },
+              {
+                "name": "emit",
+                "line": 38,
+                "doc": "Emit event to all subscribers. Thread-safe."
+              },
+              {
+                "name": "subscriber_count",
+                "line": 62,
+                "doc": ""
+              }
+            ]
+          },
+          {
+            "name": "ActionLogger",
+            "line": 48,
+            "doc": "JSONL action logger for a desktop session.",
+            "methods": [
+              {
+                "name": "log",
+                "line": 75,
+                "doc": "Write one structured action entry."
+              },
+              {
+                "name": "read_recent",
+                "line": 124,
+                "doc": "Read last N action entries from the flat log file."
+              },
+              {
+                "name": "close",
+                "line": 148,
+                "doc": "Mark session as ended in the index."
+              }
+            ]
+          }
+        ],
+        "functions": [
+          {
+            "name": "get_logger",
+            "line": 86,
+            "doc": "Get or create an ActionLogger for a desktop session."
+          },
+          {
+            "name": "log_action",
+            "line": 98,
+            "doc": "Log a tool invocation to the desktop's action log."
+          },
+          {
+            "name": "format_recent_actions",
+            "line": 115,
+            "doc": "Format last N actions as a compact [RECENT ACTIONS] block for injection."
+          },
+          {
+            "name": "get_desktop",
+            "line": 148,
+            "doc": "Get Desktop interaction object, validating ID and state."
+          },
+          {
+            "name": "log_lifecycle",
+            "line": 204,
+            "doc": "Log lifecycle event (create/destroy/pause/resume) to events.jsonl."
+          },
+          {
+            "name": "get_current_agent",
+            "line": 37,
+            "doc": "Get agent_id for current request, or None if unauthenticated."
+          },
+          {
+            "name": "get_current_role",
+            "line": 46,
+            "doc": "Get role for current request: 'admin', 'agent', or 'anonymous'."
+          },
+          {
+            "name": "is_admin",
+            "line": 51,
+            "doc": "Check if current request has admin privileges."
+          },
+          {
+            "name": "get_current_ip",
+            "line": 56,
+            "doc": "Get source IP for current request."
+          },
+          {
+            "name": "set_identity",
+            "line": 61,
+            "doc": "Set identity for current request context."
+          },
+          {
+            "name": "clear_identity",
+            "line": 69,
+            "doc": "Clear identity after request."
+          },
+          {
+            "name": "resolve_api_key",
+            "line": 76,
+            "doc": "Resolve API key to (agent_id, role)."
+          },
+          {
+            "name": "crop_screenshot",
+            "line": 26,
+            "doc": "Crop screenshot to region."
+          },
+          {
+            "name": "normalize_screenshot",
+            "line": 59,
+            "doc": "Resize screenshot to fixed width, optionally pad to square."
+          },
+          {
+            "name": "grid_overlay",
+            "line": 101,
+            "doc": "Draw numbered grid overlay on screenshot."
+          },
+          {
+            "name": "enhance_screenshot",
+            "line": 163,
+            "doc": "Enhance screenshot for better visibility of dark-on-dark and light-on-light elements."
+          },
+          {
+            "name": "find_element",
+            "line": 229,
+            "doc": "Find UI element coordinates using Gemini Flash vision."
+          }
+        ]
+      },
+      "auth": {
+        "files": [
+          "src/screenbox/auth.py",
+          "src/screenbox/auth_middleware.py"
+        ],
+        "total_lines": 216,
+        "classes": [
+          {
+            "name": "AuthError",
+            "line": 27,
+            "doc": "Authentication or authorization failure.",
+            "methods": []
+          },
+          {
+            "name": "TokenAuth",
+            "line": 32,
+            "doc": "HMAC-SHA256 token-based auth for agent -> desktop access control.",
+            "methods": [
+              {
+                "name": "create",
+                "line": 85,
+                "doc": "Create a signed agent token."
+              },
+              {
+                "name": "validate",
+                "line": 107,
+                "doc": "Validate token signature and expiry."
+              },
+              {
+                "name": "check_access",
+                "line": 149,
+                "doc": "Validate token and check access to specific desktop."
+              },
+              {
+                "name": "enabled",
+                "line": 168,
+                "doc": "Whether auth is configured (secret exists)."
+              }
+            ]
+          },
+          {
+            "name": "AgentAuthMiddleware",
+            "line": 17,
+            "doc": "Extract X-API-Key from request, resolve to agent identity.",
+            "methods": [
+              {
+                "name": "dispatch",
+                "line": 24,
+                "doc": ""
+              }
+            ]
+          }
+        ],
+        "functions": []
+      },
+      "beta": {
+        "files": [
+          "src/screenbox/beta/__init__.py",
+          "src/screenbox/beta/replay/__init__.py",
+          "src/screenbox/beta/replay/executor.py",
+          "src/screenbox/beta/replay/extract.py",
+          "src/screenbox/beta/replay/recipe.py",
+          "src/screenbox/beta/replay/tool.py"
+        ],
+        "total_lines": 442,
+        "classes": [
+          {
+            "name": "ReplayResult",
+            "line": 11,
+            "doc": "",
+            "methods": [
+              {
+                "name": "to_dict",
+                "line": 18,
+                "doc": ""
+              }
+            ]
+          },
+          {
+            "name": "RecipeStep",
+            "line": 9,
+            "doc": "",
+            "methods": []
+          },
+          {
+            "name": "Recipe",
+            "line": 19,
+            "doc": "",
+            "methods": []
+          }
+        ],
+        "functions": [
+          {
+            "name": "execute_recipe",
+            "line": 29,
+            "doc": "Execute a recipe step by step."
+          },
+          {
+            "name": "extract_steps",
+            "line": 24,
+            "doc": "Extract replayable tool calls from a session JSON."
+          },
+          {
+            "name": "steps_to_recipe",
+            "line": 58,
+            "doc": "Convert extracted steps to a recipe dict."
+          },
+          {
+            "name": "main",
+            "line": 69,
+            "doc": ""
+          },
+          {
+            "name": "load_recipe",
+            "line": 52,
+            "doc": "Load a recipe from a YAML file."
+          },
+          {
+            "name": "resolve_steps",
+            "line": 78,
+            "doc": "Resolve all steps with parameter substitution."
+          },
+          {
+            "name": "register",
+            "line": 10,
+            "doc": ""
+          }
+        ]
+      },
+      "browser": {
+        "files": [
+          "src/screenbox/browser.py"
+        ],
+        "total_lines": 668,
+        "classes": [
+          {
+            "name": "BrowserClient",
+            "line": 22,
+            "doc": "Browser interaction for a Screenbox desktop.",
+            "methods": [
+              {
+                "name": "navigate",
+                "line": 60,
+                "doc": "Navigate Chrome to URL via extension."
+              },
+              {
+                "name": "go_back",
+                "line": 94,
+                "doc": "Navigate back in browser history."
+              },
+              {
+                "name": "go_forward",
+                "line": 98,
+                "doc": "Navigate forward in browser history."
+              },
+              {
+                "name": "wait_for",
+                "line": 102,
+                "doc": "Wait for browser condition (url:, title:, selector:)."
+              },
+              {
+                "name": "get_tabs",
+                "line": 115,
+                "doc": "Get list of browser tabs via extension."
+              },
+              {
+                "name": "new_tab",
+                "line": 122,
+                "doc": "Open a new browser tab."
+              },
+              {
+                "name": "close_tab",
+                "line": 133,
+                "doc": "Close a browser tab."
+              },
+              {
+                "name": "switch_tab",
+                "line": 143,
+                "doc": "Switch to a specific browser tab."
+              },
+              {
+                "name": "page_map",
+                "line": 154,
+                "doc": "Get semantic structure of the page."
+              },
+              {
+                "name": "page_read",
+                "line": 185,
+                "doc": "Get full main content of the page as clean text."
+              },
+              {
+                "name": "view_read",
+                "line": 213,
+                "doc": "Get text of currently visible viewport area."
+              },
+              {
+                "name": "cursor_read",
+                "line": 231,
+                "doc": "Get innerText of DOM element under current mouse cursor."
+              },
+              {
+                "name": "ext_click",
+                "line": 262,
+                "doc": "Click element by CSS selector via extension."
+              },
+              {
+                "name": "ext_type",
+                "line": 275,
+                "doc": "Type text into element by CSS selector via extension."
+              },
+              {
+                "name": "get_content",
+                "line": 284,
+                "doc": "Get text content of element or page via extension."
+              },
+              {
+                "name": "get_page_info",
+                "line": 300,
+                "doc": "Get page info (URL, title, elements, forms) via extension."
+              },
+              {
+                "name": "execute_js",
+                "line": 307,
+                "doc": "Execute JavaScript in page context via extension."
+              },
+              {
+                "name": "chrome_search",
+                "line": 341,
+                "doc": "Ctrl+F search in Chrome page."
+              },
+              {
+                "name": "get_cookies",
+                "line": 356,
+                "doc": "Get browser cookies, optionally filtered by URL."
+              },
+              {
+                "name": "set_cookies",
+                "line": 366,
+                "doc": "Set browser cookies."
+              },
+              {
+                "name": "clear_cookies",
+                "line": 373,
+                "doc": "Clear browser cookies, optionally for specific URL."
+              },
+              {
+                "name": "save_pdf",
+                "line": 459,
+                "doc": "Save current Chrome page as PDF via CDP."
+              },
+              {
+                "name": "dom_snapshot",
+                "line": 467,
+                "doc": "Get full DOM tree snapshot via CDP."
+              },
+              {
+                "name": "performance_metrics",
+                "line": 475,
+                "doc": "Get page performance metrics via CDP."
+              },
+              {
+                "name": "emulate_device",
+                "line": 482,
+                "doc": "Set device emulation via CDP."
+              },
+              {
+                "name": "set_geolocation",
+                "line": 497,
+                "doc": "Override geolocation via CDP."
+              },
+              {
+                "name": "ignore_ssl_errors",
+                "line": 507,
+                "doc": "Ignore or restore SSL certificate errors via CDP."
+              },
+              {
+                "name": "browser_screenshot",
+                "line": 519,
+                "doc": "Capture Chrome viewport screenshot via DevTools (no OS chrome)."
+              },
+              {
+                "name": "console_start",
+                "line": 534,
+                "doc": "Start capturing console logs by injecting a JS hook via CDP."
+              },
+              {
+                "name": "console_stop",
+                "line": 561,
+                "doc": "Stop capturing console logs and restore original methods."
+              },
+              {
+                "name": "console_get",
+                "line": 569,
+                "doc": "Get captured console logs."
+              },
+              {
+                "name": "network_get",
+                "line": 594,
+                "doc": "Get network requests via Performance API."
+              },
+              {
+                "name": "chrome_ready",
+                "line": 620,
+                "doc": "Quick check: is Chrome DevTools responding?"
+              },
+              {
+                "name": "health_check",
+                "line": 633,
+                "doc": "Comprehensive health check: Xvnc, VNC, Chrome, WS bridge."
+              }
+            ]
+          }
+        ],
+        "functions": []
+      },
+      "config": {
+        "files": [
+          "src/screenbox/config.py"
+        ],
+        "total_lines": 180,
+        "classes": [
+          {
+            "name": "Config",
+            "line": 43,
+            "doc": "Screenbox configuration.",
+            "methods": [
+              {
+                "name": "reload",
+                "line": 73,
+                "doc": "Re-read config from disk (hot reload)."
+              },
+              {
+                "name": "get",
+                "line": 87,
+                "doc": ""
+              },
+              {
+                "name": "viewport_width",
+                "line": 94,
+                "doc": ""
+              },
+              {
+                "name": "viewport_height",
+                "line": 98,
+                "doc": ""
+              },
+              {
+                "name": "max_desktops",
+                "line": 102,
+                "doc": ""
+              },
+              {
+                "name": "memory_limit",
+                "line": 106,
+                "doc": ""
+              },
+              {
+                "name": "image",
+                "line": 110,
+                "doc": ""
+              },
+              {
+                "name": "docker_network",
+                "line": 114,
+                "doc": ""
+              },
+              {
+                "name": "port_bind_address",
+                "line": 118,
+                "doc": ""
+              },
+              {
+                "name": "look_factor",
+                "line": 122,
+                "doc": "Factor for adaptive look radius: radius = min(screen_w, screen_h) * factor."
+              },
+              {
+                "name": "desktops_dir",
+                "line": 127,
+                "doc": ""
+              },
+              {
+                "name": "logs_dir",
+                "line": 131,
+                "doc": ""
+              },
+              {
+                "name": "snapshots_dir",
+                "line": 135,
+                "doc": ""
+              },
+              {
+                "name": "desktop_dir",
+                "line": 138,
+                "doc": "Get or create desktop data directory (metadata only, no bind mounts)."
+              },
+              {
+                "name": "snapshot_dir",
+                "line": 144,
+                "doc": "Get or create snapshot directory for a desktop."
+              },
+              {
+                "name": "auto_snapshot_minutes",
+                "line": 151,
+                "doc": ""
+              },
+              {
+                "name": "encrypt_snapshots",
+                "line": 155,
+                "doc": ""
+              },
+              {
+                "name": "age_key_file",
+                "line": 159,
+                "doc": ""
+              },
+              {
+                "name": "ensure_age_key",
+                "line": 162,
+                "doc": "Get or create age encryption key. Returns path to key file."
+              }
+            ]
+          }
+        ],
+        "functions": []
+      },
+      "desktop": {
+        "files": [
+          "src/screenbox/desktop/__init__.py",
+          "src/screenbox/desktop/a11y.py",
+          "src/screenbox/desktop/browser_proxy.py",
+          "src/screenbox/desktop/ext_client.py",
+          "src/screenbox/desktop/find.py",
+          "src/screenbox/desktop/grid.py",
+          "src/screenbox/desktop/input.py",
+          "src/screenbox/desktop/ocr.py"
+        ],
+        "total_lines": 2644,
+        "classes": [
+          {
+            "name": "Desktop",
+            "line": 33,
+            "doc": "Desktop interaction for a specific container.",
+            "methods": [
+              {
+                "name": "browser",
+                "line": 62,
+                "doc": "Lazy-initialized BrowserClient for all browser interaction."
+              },
+              {
+                "name": "screenshot",
+                "line": 189,
+                "doc": "Capture clean desktop as JPEG (grid overlay auto-hidden if active)."
+              },
+              {
+                "name": "screenshot_base64",
+                "line": 234,
+                "doc": "Capture screen as base64-encoded JPEG."
+              },
+              {
+                "name": "shell",
+                "line": 269,
+                "doc": "Execute shell command inside the container."
+              },
+              {
+                "name": "record_start",
+                "line": 292,
+                "doc": "Start screen recording using ffmpeg x11grab."
+              },
+              {
+                "name": "record_stop",
+                "line": 348,
+                "doc": "Stop active screen recording."
+              },
+              {
+                "name": "record_status",
+                "line": 400,
+                "doc": "Check if recording is active."
+              },
+              {
+                "name": "get_cursor_position",
+                "line": 412,
+                "doc": "Get current cursor position."
+              },
+              {
+                "name": "get_mouse_pos",
+                "line": 422,
+                "doc": "Get current mouse position."
+              }
+            ]
+          },
+          {
+            "name": "AccessibilityMixin",
+            "line": 6,
+            "doc": "AT-SPI accessibility methods for Desktop.",
+            "methods": [
+              {
+                "name": "accessibility_apps",
+                "line": 23,
+                "doc": "List accessible applications on the desktop via AT-SPI."
+              },
+              {
+                "name": "accessibility_tree",
+                "line": 44,
+                "doc": "Get accessibility tree for an app (or full desktop)."
+              },
+              {
+                "name": "accessibility_find",
+                "line": 104,
+                "doc": "Find accessible elements by role and/or name."
+              },
+              {
+                "name": "accessibility_activate",
+                "line": 163,
+                "doc": "Activate (click/press) an accessible element by its path."
+              },
+              {
+                "name": "accessibility_set_text",
+                "line": 226,
+                "doc": "Set text value on an accessible text element."
+              }
+            ]
+          },
+          {
+            "name": "BrowserProxyMixin",
+            "line": 4,
+            "doc": "Browser interaction forwarded to Chrome extension.",
+            "methods": [
+              {
+                "name": "navigate",
+                "line": 12,
+                "doc": ""
+              },
+              {
+                "name": "semantics",
+                "line": 15,
+                "doc": ""
+              },
+              {
+                "name": "get_page_info",
+                "line": 18,
+                "doc": ""
+              },
+              {
+                "name": "execute_js",
+                "line": 21,
+                "doc": ""
+              },
+              {
+                "name": "go_back",
+                "line": 24,
+                "doc": ""
+              },
+              {
+                "name": "go_forward",
+                "line": 27,
+                "doc": ""
+              },
+              {
+                "name": "get_tabs",
+                "line": 32,
+                "doc": ""
+              },
+              {
+                "name": "new_tab",
+                "line": 35,
+                "doc": ""
+              },
+              {
+                "name": "close_tab",
+                "line": 38,
+                "doc": ""
+              },
+              {
+                "name": "switch_tab",
+                "line": 41,
+                "doc": ""
+              },
+              {
+                "name": "get_cookies",
+                "line": 46,
+                "doc": ""
+              },
+              {
+                "name": "set_cookies",
+                "line": 49,
+                "doc": ""
+              },
+              {
+                "name": "clear_cookies",
+                "line": 52,
+                "doc": ""
+              },
+              {
+                "name": "ext_click",
+                "line": 57,
+                "doc": ""
+              },
+              {
+                "name": "ext_type",
+                "line": 60,
+                "doc": ""
+              },
+              {
+                "name": "get_content",
+                "line": 63,
+                "doc": ""
+              },
+              {
+                "name": "save_pdf",
+                "line": 71,
+                "doc": ""
+              },
+              {
+                "name": "dom_snapshot",
+                "line": 74,
+                "doc": ""
+              },
+              {
+                "name": "performance_metrics",
+                "line": 77,
+                "doc": ""
+              },
+              {
+                "name": "emulate_device",
+                "line": 80,
+                "doc": ""
+              },
+              {
+                "name": "set_geolocation",
+                "line": 83,
+                "doc": ""
+              },
+              {
+                "name": "ignore_ssl_errors",
+                "line": 86,
+                "doc": ""
+              },
+              {
+                "name": "health_check",
+                "line": 91,
+                "doc": ""
+              },
+              {
+                "name": "chrome_ready",
+                "line": 94,
+                "doc": ""
+              },
+              {
+                "name": "browser_screenshot",
+                "line": 99,
+                "doc": ""
+              },
+              {
+                "name": "console_start",
+                "line": 102,
+                "doc": ""
+              },
+              {
+                "name": "console_stop",
+                "line": 105,
+                "doc": ""
+              },
+              {
+                "name": "console_get",
+                "line": 108,
+                "doc": ""
+              },
+              {
+                "name": "network_get",
+                "line": 111,
+                "doc": ""
+              },
+              {
+                "name": "chrome_search",
+                "line": 116,
+                "doc": ""
+              }
+            ]
+          },
+          {
+            "name": "ExtensionClient",
+            "line": 10,
+            "doc": "WebSocket client to communicate with Chrome extension via ws-bridge.",
+            "methods": [
+              {
+                "name": "send_command",
+                "line": 141,
+                "doc": "Send command to extension and wait for response."
+              },
+              {
+                "name": "close",
+                "line": 170,
+                "doc": ""
+              },
+              {
+                "name": "connected",
+                "line": 202,
+                "doc": ""
+              }
+            ]
+          },
+          {
+            "name": "FindMixin",
+            "line": 6,
+            "doc": "Screen search, text location, and menu navigation via OCR.",
+            "methods": [
+              {
+                "name": "find_on_screen",
+                "line": 18,
+                "doc": "Find text on screen via screenshot + OCR (requires tesseract)."
+              },
+              {
+                "name": "click_on_text",
+                "line": 53,
+                "doc": "Find text on screen via OCR and click its center."
+              },
+              {
+                "name": "wait_for_text",
+                "line": 67,
+                "doc": "Poll OCR until text appears on screen."
+              },
+              {
+                "name": "smart_click",
+                "line": 89,
+                "doc": "Approximate click + OCR zoom = precise click."
+              },
+              {
+                "name": "wait_for",
+                "line": 149,
+                "doc": "Wait for a condition on the desktop."
+              },
+              {
+                "name": "menu_click",
+                "line": 196,
+                "doc": "Navigate and click through a menu path like 'File > Save As'."
+              }
+            ]
+          },
+          {
+            "name": "GridMixin",
+            "line": 19,
+            "doc": "Grid methods extracted from Desktop class.",
+            "methods": [
+              {
+                "name": "set_grid",
+                "line": 37,
+                "doc": "Set the unified grid dimensions. Persisted in manager across Desktop instances."
+              },
+              {
+                "name": "screenshot_grid",
+                "line": 81,
+                "doc": "Capture screen as square JPEG with numbered grid overlay."
+              },
+              {
+                "name": "click_cell",
+                "line": 212,
+                "doc": "Click within a numbered grid cell. Returns OCR around cursor."
+              },
+              {
+                "name": "move_to_cell",
+                "line": 222,
+                "doc": "Move cursor to a position within a numbered grid cell. Returns OCR around cursor."
+              },
+              {
+                "name": "look_at_cell",
+                "line": 232,
+                "doc": "OCR around cell position WITHOUT moving the mouse. Scout before clicking."
+              },
+              {
+                "name": "dashboard_grid",
+                "line": 241,
+                "doc": "Toggle numbered grid overlay on the live VNC desktop (visual debug layer)."
+              },
+              {
+                "name": "grid_on",
+                "line": 263,
+                "doc": ""
+              },
+              {
+                "name": "grid_off",
+                "line": 266,
+                "doc": ""
+              },
+              {
+                "name": "grid_screenshot",
+                "line": 269,
+                "doc": "Take screenshot and divide into numbered grid cells."
+              }
+            ]
+          },
+          {
+            "name": "InputMixin",
+            "line": 15,
+            "doc": "Mouse, keyboard, clipboard, window management, and overlay methods.",
+            "methods": [
+              {
+                "name": "screenshot_square",
+                "line": 18,
+                "doc": "Capture screen as 1000x1000 JPEG with cursor marker and info panel."
+              },
+              {
+                "name": "hover_percent",
+                "line": 77,
+                "doc": "Move cursor by percentage of screen size from current position."
+              },
+              {
+                "name": "click",
+                "line": 116,
+                "doc": "Click at (x, y). button: 1=left, 2=middle, 3=right."
+              },
+              {
+                "name": "double_click",
+                "line": 131,
+                "doc": "Double-click at (x, y)."
+              },
+              {
+                "name": "mouse_move",
+                "line": 138,
+                "doc": "Move mouse to (x, y)."
+              },
+              {
+                "name": "mouse_down",
+                "line": 142,
+                "doc": "Press mouse button at (x, y) without releasing."
+              },
+              {
+                "name": "mouse_up",
+                "line": 147,
+                "doc": "Release mouse button at (x, y)."
+              },
+              {
+                "name": "type_text",
+                "line": 167,
+                "doc": "Type text string. delay in ms between keystrokes."
+              },
+              {
+                "name": "key",
+                "line": 178,
+                "doc": "Press key combination. E.g. 'ctrl+c', 'Return', 'alt+F4'."
+              },
+              {
+                "name": "scroll",
+                "line": 187,
+                "doc": "Scroll. direction: up/down/left/right."
+              },
+              {
+                "name": "drag",
+                "line": 202,
+                "doc": "Drag from (x1,y1) to (x2,y2)."
+              },
+              {
+                "name": "right_click",
+                "line": 215,
+                "doc": "Right-click at (x, y)."
+              },
+              {
+                "name": "hover",
+                "line": 219,
+                "doc": "Move mouse to (x, y) and optionally wait."
+              },
+              {
+                "name": "get_clipboard",
+                "line": 227,
+                "doc": "Get clipboard content."
+              },
+              {
+                "name": "set_clipboard",
+                "line": 232,
+                "doc": "Set clipboard content."
+              },
+              {
+                "name": "get_windows",
+                "line": 268,
+                "doc": "List application windows (filters out panels, desktop, overlays)."
+              },
+              {
+                "name": "activate_window",
+                "line": 315,
+                "doc": "Activate (focus) a window by ID. Uses active window if no ID given."
+              },
+              {
+                "name": "minimize_window",
+                "line": 322,
+                "doc": "Minimize a window. Uses active window if no ID given."
+              },
+              {
+                "name": "get_windows_near",
+                "line": 329,
+                "doc": "Get windows overlapping a circle around (x, y) with z-order."
+              },
+              {
+                "name": "maximize_window",
+                "line": 406,
+                "doc": "Maximize the active window via key combo."
+              },
+              {
+                "name": "close_window",
+                "line": 410,
+                "doc": "Close a window."
+              },
+              {
+                "name": "window_move",
+                "line": 417,
+                "doc": "Move a window. If no window_id, moves active window."
+              },
+              {
+                "name": "window_restore",
+                "line": 424,
+                "doc": "Restore minimized/maximized window to normal size."
+              },
+              {
+                "name": "show_desktop",
+                "line": 431,
+                "doc": "Minimize all windows."
+              },
+              {
+                "name": "window_resize",
+                "line": 435,
+                "doc": "Resize a window. If no window_id, resizes active window."
+              },
+              {
+                "name": "overlay_mode",
+                "line": 444,
+                "doc": "Set click indicator display mode."
+              }
+            ]
+          },
+          {
+            "name": "OCRMixin",
+            "line": 23,
+            "doc": "OCR-related methods for Desktop.",
+            "methods": [
+              {
+                "name": "look_at_cursor",
+                "line": 90,
+                "doc": "OCR around current cursor position WITHOUT moving it."
+              },
+              {
+                "name": "get_caret_position",
+                "line": 102,
+                "doc": "Get text caret position via AT-SPI focused widget."
+              },
+              {
+                "name": "look_at_caret",
+                "line": 154,
+                "doc": "OCR around text caret position (not mouse cursor)."
+              },
+              {
+                "name": "inspect_cell",
+                "line": 177,
+                "doc": "Crop grid cell (1-2 levels), run OCR, return elements with absolute screen coords."
+              },
+              {
+                "name": "observe",
+                "line": 269,
+                "doc": "OCR around current mouse position. Move mouse approximately where you need, then call this."
+              },
+              {
+                "name": "inspect_area",
+                "line": 281,
+                "doc": "Crop area around (x,y), zoom it, run OCR, return elements with absolute screen coords."
+              }
+            ]
+          }
+        ],
+        "functions": []
+      },
+      "api": {
+        "files": [
+          "src/screenbox/http_api.py"
+        ],
+        "total_lines": 1151,
+        "classes": [],
+        "functions": [
+          {
+            "name": "register",
+            "line": 108,
+            "doc": "Register all HTTP API routes on the FastMCP server."
+          }
+        ]
+      },
+      "knowledge": {
+        "files": [
+          "src/screenbox/knowledge.py"
+        ],
+        "total_lines": 583,
+        "classes": [
+          {
+            "name": "DesktopInfo",
+            "line": 115,
+            "doc": "Cached system info for a desktop container.",
+            "methods": [
+              {
+                "name": "get",
+                "line": 121,
+                "doc": "Get or probe desktop system info. Cached per desktop_id."
+              },
+              {
+                "name": "invalidate",
+                "line": 129,
+                "doc": "Clear cache for a desktop."
+              }
+            ]
+          },
+          {
+            "name": "KnowledgeStore",
+            "line": 217,
+            "doc": "Typed knowledge storage with flow support and cross-references.",
+            "methods": [
+              {
+                "name": "list_all",
+                "line": 326,
+                "doc": "List knowledge entries. With desktop_id: only desktop-specific entries."
+              },
+              {
+                "name": "list_desktops",
+                "line": 333,
+                "doc": "List desktop IDs that have their own knowledge."
+              },
+              {
+                "name": "add_fact",
+                "line": 392,
+                "doc": "Add a knowledge fact. Returns the new fact."
+              },
+              {
+                "name": "search",
+                "line": 419,
+                "doc": "Search facts by trigger word overlap. Returns most relevant facts."
+              },
+              {
+                "name": "search_flows",
+                "line": 444,
+                "doc": "Find matching flows by trigger overlap."
+              },
+              {
+                "name": "get_outline",
+                "line": 471,
+                "doc": "Get compact outline of all knowledge for an entry."
+              },
+              {
+                "name": "get_desktop_info",
+                "line": 489,
+                "doc": "Get cached system info for a desktop."
+              },
+              {
+                "name": "get_hints_for_window",
+                "line": 493,
+                "doc": "Build knowledge hints: app knowledge + matching flows + resolved references."
+              },
+              {
+                "name": "get_active_app",
+                "line": 566,
+                "doc": "Get last detected app slug for a desktop."
+              }
+            ]
+          }
+        ],
+        "functions": [
+          {
+            "name": "detect_app",
+            "line": 81,
+            "doc": "Detect app from window title. Returns (slug, display_name) or (None, None)."
+          },
+          {
+            "name": "get_store",
+            "line": 575,
+            "doc": "Get or create the global KnowledgeStore."
+          }
+        ]
+      },
+      "manager": {
+        "files": [
+          "src/screenbox/manager.py"
+        ],
+        "total_lines": 1342,
+        "classes": [
+          {
+            "name": "DesktopState",
+            "line": 50,
+            "doc": "",
+            "methods": []
+          },
+          {
+            "name": "DesktopInfo",
+            "line": 65,
+            "doc": "",
+            "methods": []
+          },
+          {
+            "name": "DesktopManager",
+            "line": 85,
+            "doc": "Manages Docker containers as virtual desktops.",
+            "methods": [
+              {
+                "name": "list_desktops",
+                "line": 326,
+                "doc": "List all desktops with their state."
+              },
+              {
+                "name": "create",
+                "line": 341,
+                "doc": "Create and start a new desktop container."
+              },
+              {
+                "name": "destroy",
+                "line": 537,
+                "doc": "Stop and remove a desktop container."
+              },
+              {
+                "name": "pause",
+                "line": 568,
+                "doc": "Pause (freeze) a running desktop. Auto-saves snapshot first."
+              },
+              {
+                "name": "resume",
+                "line": 587,
+                "doc": "Resume (unfreeze) a paused desktop."
+              },
+              {
+                "name": "stop",
+                "line": 615,
+                "doc": "Stop a running desktop container."
+              },
+              {
+                "name": "start",
+                "line": 632,
+                "doc": "Start a stopped desktop container."
+              },
+              {
+                "name": "snapshot",
+                "line": 649,
+                "doc": "Save /home/screenbox from container as tar.gz snapshot."
+              },
+              {
+                "name": "restore",
+                "line": 717,
+                "doc": "Restore /home/screenbox from a snapshot into a running container."
+              },
+              {
+                "name": "list_snapshots",
+                "line": 780,
+                "doc": "List available snapshots for a desktop."
+              },
+              {
+                "name": "file_upload",
+                "line": 850,
+                "doc": "Upload file into container via docker cp."
+              },
+              {
+                "name": "file_download",
+                "line": 896,
+                "doc": "Download file from container via docker cp."
+              },
+              {
+                "name": "file_ls",
+                "line": 915,
+                "doc": "List files in container."
+              },
+              {
+                "name": "file_upload_tar",
+                "line": 934,
+                "doc": "Upload and extract a tar.gz archive into container."
+              },
+              {
+                "name": "disk_usage",
+                "line": 969,
+                "doc": "Get disk usage of key directories inside container."
+              },
+              {
+                "name": "snapshot_clone",
+                "line": 999,
+                "doc": "Clone a snapshot from one desktop to another."
+              },
+              {
+                "name": "get_memory_info",
+                "line": 1024,
+                "doc": "Read cgroup memory usage for a desktop container."
+              },
+              {
+                "name": "get",
+                "line": 1061,
+                "doc": "Get desktop info, refreshing state from Docker if stale."
+              },
+              {
+                "name": "touch",
+                "line": 1083,
+                "doc": "Update last_tool_call timestamp."
+              },
+              {
+                "name": "exec",
+                "line": 1089,
+                "doc": "Execute command inside a desktop container."
+              },
+              {
+                "name": "wait_ready",
+                "line": 1101,
+                "doc": "Wait for desktop core services: X display + ws-bridge."
+              },
+              {
+                "name": "lease_ttl",
+                "line": 1135,
+                "doc": "Lease TTL in seconds. 0 = no expiry."
+              },
+              {
+                "name": "acquire",
+                "line": 1139,
+                "doc": "Acquire exclusive lock on a desktop for an agent."
+              },
+              {
+                "name": "release",
+                "line": 1166,
+                "doc": "Release agent lock on a desktop."
+              },
+              {
+                "name": "heartbeat",
+                "line": 1183,
+                "doc": "Refresh agent lock timestamp (keep-alive)."
+              },
+              {
+                "name": "validate_session",
+                "line": 1191,
+                "doc": "Validate agent access and optionally session token."
+              },
+              {
+                "name": "smart_acquire",
+                "line": 1211,
+                "doc": "Smart acquire: reuse existing, pick idle, or fail with guidance."
+              },
+              {
+                "name": "delete_snapshots",
+                "line": 1260,
+                "doc": "Delete all snapshots for a desktop."
+              },
+              {
+                "name": "check_idle_desktops",
+                "line": 1271,
+                "doc": "Pause idle desktops and auto-release expired leases. Returns list of paused IDs."
+              },
+              {
+                "name": "start_idle_checker",
+                "line": 1328,
+                "doc": "Start background thread to check for idle desktops."
+              }
+            ]
+          }
+        ],
+        "functions": []
+      },
+      "registry": {
+        "files": [
+          "src/screenbox/registry.py"
+        ],
+        "total_lines": 406,
+        "classes": [
+          {
+            "name": "Registry",
+            "line": 23,
+            "doc": "SQLite-backed agent registry with per-thread connections.",
+            "methods": [
+              {
+                "name": "close",
+                "line": 88,
+                "doc": ""
+              },
+              {
+                "name": "register_agent",
+                "line": 97,
+                "doc": "Register new agent. Returns api_key (shown once, not stored)."
+              },
+              {
+                "name": "list_agents",
+                "line": 115,
+                "doc": ""
+              },
+              {
+                "name": "suspend_agent",
+                "line": 121,
+                "doc": "Suspend agent -- invalidates all sessions."
+              },
+              {
+                "name": "activate_agent",
+                "line": 134,
+                "doc": ""
+              },
+              {
+                "name": "delete_agent",
+                "line": 141,
+                "doc": "Delete agent, sessions, and assignments."
+              },
+              {
+                "name": "reset_agent_key",
+                "line": 149,
+                "doc": "Generate new API key for agent. Returns new key or None."
+              },
+              {
+                "name": "login",
+                "line": 169,
+                "doc": "Authenticate agent, create session. Returns session token or None."
+              },
+              {
+                "name": "validate_session",
+                "line": 193,
+                "doc": "Validate session token. Returns {agent_id, source_ip} or None."
+              },
+              {
+                "name": "logout",
+                "line": 213,
+                "doc": ""
+              },
+              {
+                "name": "list_sessions",
+                "line": 218,
+                "doc": "All active sessions with agent info."
+              },
+              {
+                "name": "assign_desktop",
+                "line": 245,
+                "doc": "Assign desktop to agent. Fails if already assigned to another."
+              },
+              {
+                "name": "release_desktop",
+                "line": 262,
+                "doc": "Admin-only: release desktop assignment."
+              },
+              {
+                "name": "get_assignment",
+                "line": 271,
+                "doc": "Get agent_id assigned to desktop, or None."
+              },
+              {
+                "name": "get_agent_desktops",
+                "line": 279,
+                "doc": "Get all desktop IDs assigned to an agent."
+              },
+              {
+                "name": "lock_desktop",
+                "line": 289,
+                "doc": ""
+              },
+              {
+                "name": "unlock_desktop",
+                "line": 298,
+                "doc": ""
+              },
+              {
+                "name": "is_locked",
+                "line": 304,
+                "doc": ""
+              },
+              {
+                "name": "get_lock",
+                "line": 311,
+                "doc": ""
+              },
+              {
+                "name": "list_assignments",
+                "line": 318,
+                "doc": "All desktop assignments."
+              },
+              {
+                "name": "create_share",
+                "line": 330,
+                "doc": "Create a share link for a desktop. Returns {token, expires_at}."
+              },
+              {
+                "name": "validate_share",
+                "line": 345,
+                "doc": "Validate share token. Returns {desktop_id, created_by, expires_at} or None."
+              },
+              {
+                "name": "revoke_share",
+                "line": 360,
+                "doc": "Revoke a single share link."
+              },
+              {
+                "name": "revoke_desktop_shares",
+                "line": 366,
+                "doc": "Revoke all share links for a desktop. Returns count revoked."
+              },
+              {
+                "name": "revoke_all_shares",
+                "line": 374,
+                "doc": "Admin: revoke all share links. Returns count revoked."
+              },
+              {
+                "name": "list_shares",
+                "line": 380,
+                "doc": "List active (non-expired) share links. Optionally filter by desktop."
+              },
+              {
+                "name": "cleanup_expired_shares",
+                "line": 399,
+                "doc": "Remove expired share links. Returns count removed."
+              }
+            ]
+          }
+        ],
+        "functions": []
+      },
+      "server": {
+        "files": [
+          "src/screenbox/server.py"
+        ],
+        "total_lines": 165,
+        "classes": [],
+        "functions": [
+          {
+            "name": "main",
+            "line": 131,
+            "doc": ""
+          }
+        ]
+      },
+      "tools": {
+        "files": [
+          "src/screenbox/tools/__init__.py",
+          "src/screenbox/tools/batch.py",
+          "src/screenbox/tools/chrome.py",
+          "src/screenbox/tools/click.py",
+          "src/screenbox/tools/file.py",
+          "src/screenbox/tools/find.py",
+          "src/screenbox/tools/help.py",
+          "src/screenbox/tools/info.py",
+          "src/screenbox/tools/input.py",
+          "src/screenbox/tools/knowledge_tools.py",
+          "src/screenbox/tools/look.py",
+          "src/screenbox/tools/manage.py",
+          "src/screenbox/tools/screenshot.py",
+          "src/screenbox/tools/watch.py",
+          "src/screenbox/tools/window.py"
+        ],
+        "total_lines": 2953,
+        "classes": [],
+        "functions": [
+          {
+            "name": "get_window_title",
+            "line": 9,
+            "doc": "Get active window title from desktop container."
+          },
+          {
+            "name": "inject_knowledge",
+            "line": 17,
+            "doc": "Get knowledge hints for current active app. Returns hint string or empty."
+          },
+          {
+            "name": "register_all",
+            "line": 34,
+            "doc": "Register all MCP tools on the FastMCP instance."
+          },
+          {
+            "name": "register",
+            "line": 67,
+            "doc": ""
+          },
+          {
+            "name": "register",
+            "line": 7,
+            "doc": ""
+          },
+          {
+            "name": "register",
+            "line": 73,
+            "doc": ""
+          },
+          {
+            "name": "register",
+            "line": 7,
+            "doc": ""
+          },
+          {
+            "name": "register",
+            "line": 7,
+            "doc": ""
+          },
+          {
+            "name": "register",
+            "line": 5,
+            "doc": ""
+          },
+          {
+            "name": "register",
+            "line": 6,
+            "doc": ""
+          },
+          {
+            "name": "register",
+            "line": 6,
+            "doc": ""
+          },
+          {
+            "name": "register",
+            "line": 11,
+            "doc": ""
+          },
+          {
+            "name": "register",
+            "line": 15,
+            "doc": ""
+          },
+          {
+            "name": "register",
+            "line": 21,
+            "doc": ""
+          },
+          {
+            "name": "register",
+            "line": 45,
+            "doc": ""
+          },
+          {
+            "name": "register",
+            "line": 62,
+            "doc": ""
+          },
+          {
+            "name": "register",
+            "line": 6,
+            "doc": ""
+          }
+        ]
+      }
+    },
+    "modules": {
+      "src/screenbox/__init__.py": {
+        "layer": "core",
+        "imports": [],
+        "classes": [],
+        "functions": [],
+        "lines": 4
+      },
+      "src/screenbox/__main__.py": {
+        "layer": "core",
+        "imports": [],
+        "classes": [],
+        "functions": [],
+        "lines": 5
+      },
+      "src/screenbox/access.py": {
+        "layer": "core",
+        "imports": [],
+        "classes": [
+          {
+            "name": "AccessGuard",
+            "line": 27,
+            "doc": "Unified access control for both MCP and HTTP channels.",
+            "methods": [
+              {
+                "name": "current_agent",
+                "line": 50,
+                "doc": "Current authenticated agent for MCP connection."
+              },
+              {
+                "name": "is_authenticated",
+                "line": 55,
+                "doc": ""
+              },
+              {
+                "name": "set_session",
+                "line": 58,
+                "doc": "Set MCP connection-level session (called once on connect)."
+              },
+              {
+                "name": "clear_session",
+                "line": 65,
+                "doc": "Clear MCP session (on disconnect)."
+              },
+              {
+                "name": "authenticate",
+                "line": 71,
+                "doc": "Authenticate agent. Returns session_token or None."
+              },
+              {
+                "name": "validate_session",
+                "line": 84,
+                "doc": "Validate session token. Returns {agent_id, source_ip} or None."
+              },
+              {
+                "name": "check_desktop_access",
+                "line": 91,
+                "doc": "Check if agent can access desktop. Raises ValueError if not."
+              },
+              {
+                "name": "check_desktop_create",
+                "line": 125,
+                "doc": "Check if agent can create desktops."
+              },
+              {
+                "name": "get_agent_desktops",
+                "line": 136,
+                "doc": "Get desktops assigned to agent."
+              },
+              {
+                "name": "auto_assign",
+                "line": 140,
+                "doc": "Auto-assign desktop to agent on create (if authenticated)."
+              }
+            ]
+          }
+        ],
+        "functions": [],
+        "lines": 145
+      },
+      "src/screenbox/auth.py": {
+        "layer": "auth",
+        "imports": [],
+        "classes": [
+          {
+            "name": "AuthError",
+            "line": 27,
+            "doc": "Authentication or authorization failure.",
+            "methods": []
+          },
+          {
+            "name": "TokenAuth",
+            "line": 32,
+            "doc": "HMAC-SHA256 token-based auth for agent -> desktop access control.",
+            "methods": [
+              {
+                "name": "create",
+                "line": 85,
+                "doc": "Create a signed agent token."
+              },
+              {
+                "name": "validate",
+                "line": 107,
+                "doc": "Validate token signature and expiry."
+              },
+              {
+                "name": "check_access",
+                "line": 149,
+                "doc": "Validate token and check access to specific desktop."
+              },
+              {
+                "name": "enabled",
+                "line": 168,
+                "doc": "Whether auth is configured (secret exists)."
+              }
+            ]
+          }
+        ],
+        "functions": [],
+        "lines": 171
+      },
+      "src/screenbox/auth_middleware.py": {
+        "layer": "auth",
+        "imports": [],
+        "classes": [
+          {
+            "name": "AgentAuthMiddleware",
+            "line": 17,
+            "doc": "Extract X-API-Key from request, resolve to agent identity.",
+            "methods": [
+              {
+                "name": "dispatch",
+                "line": 24,
+                "doc": ""
+              }
+            ]
+          }
+        ],
+        "functions": [],
+        "lines": 45
+      },
+      "src/screenbox/beta/__init__.py": {
+        "layer": "beta",
+        "imports": [],
+        "classes": [],
+        "functions": [],
+        "lines": 2
+      },
+      "src/screenbox/beta/replay/__init__.py": {
+        "layer": "beta",
+        "imports": [],
+        "classes": [],
+        "functions": [],
+        "lines": 2
+      },
+      "src/screenbox/beta/replay/executor.py": {
+        "layer": "beta",
+        "imports": [],
+        "classes": [
+          {
+            "name": "ReplayResult",
+            "line": 11,
+            "doc": "",
+            "methods": [
+              {
+                "name": "to_dict",
+                "line": 18,
+                "doc": ""
+              }
+            ]
+          }
+        ],
+        "functions": [
+          {
+            "name": "execute_recipe",
+            "line": 29,
+            "doc": "Execute a recipe step by step."
+          }
+        ],
+        "lines": 120
+      },
+      "src/screenbox/beta/replay/extract.py": {
+        "layer": "beta",
+        "imports": [],
+        "classes": [],
+        "functions": [
+          {
+            "name": "extract_steps",
+            "line": 24,
+            "doc": "Extract replayable tool calls from a session JSON."
+          },
+          {
+            "name": "steps_to_recipe",
+            "line": 58,
+            "doc": "Convert extracted steps to a recipe dict."
+          },
+          {
+            "name": "main",
+            "line": 69,
+            "doc": ""
+          }
+        ],
+        "lines": 94
+      },
+      "src/screenbox/beta/replay/recipe.py": {
+        "layer": "beta",
+        "imports": [],
+        "classes": [
+          {
+            "name": "RecipeStep",
+            "line": 9,
+            "doc": "",
+            "methods": []
+          },
+          {
+            "name": "Recipe",
+            "line": 19,
+            "doc": "",
+            "methods": []
+          }
+        ],
+        "functions": [
+          {
+            "name": "load_recipe",
+            "line": 52,
+            "doc": "Load a recipe from a YAML file."
+          },
+          {
+            "name": "resolve_steps",
+            "line": 78,
+            "doc": "Resolve all steps with parameter substitution."
+          }
+        ],
+        "lines": 92
+      },
+      "src/screenbox/beta/replay/tool.py": {
+        "layer": "beta",
+        "imports": [],
+        "classes": [],
+        "functions": [
+          {
+            "name": "register",
+            "line": 10,
+            "doc": ""
+          }
+        ],
+        "lines": 132
+      },
+      "src/screenbox/browser.py": {
+        "layer": "browser",
+        "imports": [],
+        "classes": [
+          {
+            "name": "BrowserClient",
+            "line": 22,
+            "doc": "Browser interaction for a Screenbox desktop.",
+            "methods": [
+              {
+                "name": "navigate",
+                "line": 60,
+                "doc": "Navigate Chrome to URL via extension."
+              },
+              {
+                "name": "go_back",
+                "line": 94,
+                "doc": "Navigate back in browser history."
+              },
+              {
+                "name": "go_forward",
+                "line": 98,
+                "doc": "Navigate forward in browser history."
+              },
+              {
+                "name": "wait_for",
+                "line": 102,
+                "doc": "Wait for browser condition (url:, title:, selector:)."
+              },
+              {
+                "name": "get_tabs",
+                "line": 115,
+                "doc": "Get list of browser tabs via extension."
+              },
+              {
+                "name": "new_tab",
+                "line": 122,
+                "doc": "Open a new browser tab."
+              },
+              {
+                "name": "close_tab",
+                "line": 133,
+                "doc": "Close a browser tab."
+              },
+              {
+                "name": "switch_tab",
+                "line": 143,
+                "doc": "Switch to a specific browser tab."
+              },
+              {
+                "name": "page_map",
+                "line": 154,
+                "doc": "Get semantic structure of the page."
+              },
+              {
+                "name": "page_read",
+                "line": 185,
+                "doc": "Get full main content of the page as clean text."
+              },
+              {
+                "name": "view_read",
+                "line": 213,
+                "doc": "Get text of currently visible viewport area."
+              },
+              {
+                "name": "cursor_read",
+                "line": 231,
+                "doc": "Get innerText of DOM element under current mouse cursor."
+              },
+              {
+                "name": "ext_click",
+                "line": 262,
+                "doc": "Click element by CSS selector via extension."
+              },
+              {
+                "name": "ext_type",
+                "line": 275,
+                "doc": "Type text into element by CSS selector via extension."
+              },
+              {
+                "name": "get_content",
+                "line": 284,
+                "doc": "Get text content of element or page via extension."
+              },
+              {
+                "name": "get_page_info",
+                "line": 300,
+                "doc": "Get page info (URL, title, elements, forms) via extension."
+              },
+              {
+                "name": "execute_js",
+                "line": 307,
+                "doc": "Execute JavaScript in page context via extension."
+              },
+              {
+                "name": "chrome_search",
+                "line": 341,
+                "doc": "Ctrl+F search in Chrome page."
+              },
+              {
+                "name": "get_cookies",
+                "line": 356,
+                "doc": "Get browser cookies, optionally filtered by URL."
+              },
+              {
+                "name": "set_cookies",
+                "line": 366,
+                "doc": "Set browser cookies."
+              },
+              {
+                "name": "clear_cookies",
+                "line": 373,
+                "doc": "Clear browser cookies, optionally for specific URL."
+              },
+              {
+                "name": "save_pdf",
+                "line": 459,
+                "doc": "Save current Chrome page as PDF via CDP."
+              },
+              {
+                "name": "dom_snapshot",
+                "line": 467,
+                "doc": "Get full DOM tree snapshot via CDP."
+              },
+              {
+                "name": "performance_metrics",
+                "line": 475,
+                "doc": "Get page performance metrics via CDP."
+              },
+              {
+                "name": "emulate_device",
+                "line": 482,
+                "doc": "Set device emulation via CDP."
+              },
+              {
+                "name": "set_geolocation",
+                "line": 497,
+                "doc": "Override geolocation via CDP."
+              },
+              {
+                "name": "ignore_ssl_errors",
+                "line": 507,
+                "doc": "Ignore or restore SSL certificate errors via CDP."
+              },
+              {
+                "name": "browser_screenshot",
+                "line": 519,
+                "doc": "Capture Chrome viewport screenshot via DevTools (no OS chrome)."
+              },
+              {
+                "name": "console_start",
+                "line": 534,
+                "doc": "Start capturing console logs by injecting a JS hook via CDP."
+              },
+              {
+                "name": "console_stop",
+                "line": 561,
+                "doc": "Stop capturing console logs and restore original methods."
+              },
+              {
+                "name": "console_get",
+                "line": 569,
+                "doc": "Get captured console logs."
+              },
+              {
+                "name": "network_get",
+                "line": 594,
+                "doc": "Get network requests via Performance API."
+              },
+              {
+                "name": "chrome_ready",
+                "line": 620,
+                "doc": "Quick check: is Chrome DevTools responding?"
+              },
+              {
+                "name": "health_check",
+                "line": 633,
+                "doc": "Comprehensive health check: Xvnc, VNC, Chrome, WS bridge."
+              }
+            ]
+          }
+        ],
+        "functions": [],
+        "lines": 668
+      },
+      "src/screenbox/catalog.py": {
+        "layer": "core",
+        "imports": [],
+        "classes": [],
+        "functions": [],
+        "lines": 26
+      },
+      "src/screenbox/config.py": {
+        "layer": "config",
+        "imports": [],
+        "classes": [
+          {
+            "name": "Config",
+            "line": 43,
+            "doc": "Screenbox configuration.",
+            "methods": [
+              {
+                "name": "reload",
+                "line": 73,
+                "doc": "Re-read config from disk (hot reload)."
+              },
+              {
+                "name": "get",
+                "line": 87,
+                "doc": ""
+              },
+              {
+                "name": "viewport_width",
+                "line": 94,
+                "doc": ""
+              },
+              {
+                "name": "viewport_height",
+                "line": 98,
+                "doc": ""
+              },
+              {
+                "name": "max_desktops",
+                "line": 102,
+                "doc": ""
+              },
+              {
+                "name": "memory_limit",
+                "line": 106,
+                "doc": ""
+              },
+              {
+                "name": "image",
+                "line": 110,
+                "doc": ""
+              },
+              {
+                "name": "docker_network",
+                "line": 114,
+                "doc": ""
+              },
+              {
+                "name": "port_bind_address",
+                "line": 118,
+                "doc": ""
+              },
+              {
+                "name": "look_factor",
+                "line": 122,
+                "doc": "Factor for adaptive look radius: radius = min(screen_w, screen_h) * factor."
+              },
+              {
+                "name": "desktops_dir",
+                "line": 127,
+                "doc": ""
+              },
+              {
+                "name": "logs_dir",
+                "line": 131,
+                "doc": ""
+              },
+              {
+                "name": "snapshots_dir",
+                "line": 135,
+                "doc": ""
+              },
+              {
+                "name": "desktop_dir",
+                "line": 138,
+                "doc": "Get or create desktop data directory (metadata only, no bind mounts)."
+              },
+              {
+                "name": "snapshot_dir",
+                "line": 144,
+                "doc": "Get or create snapshot directory for a desktop."
+              },
+              {
+                "name": "auto_snapshot_minutes",
+                "line": 151,
+                "doc": ""
+              },
+              {
+                "name": "encrypt_snapshots",
+                "line": 155,
+                "doc": ""
+              },
+              {
+                "name": "age_key_file",
+                "line": 159,
+                "doc": ""
+              },
+              {
+                "name": "ensure_age_key",
+                "line": 162,
+                "doc": "Get or create age encryption key. Returns path to key file."
+              }
+            ]
+          }
+        ],
+        "functions": [],
+        "lines": 180
+      },
+      "src/screenbox/desktop/__init__.py": {
+        "layer": "desktop",
+        "imports": [],
+        "classes": [
+          {
+            "name": "Desktop",
+            "line": 33,
+            "doc": "Desktop interaction for a specific container.",
+            "methods": [
+              {
+                "name": "browser",
+                "line": 62,
+                "doc": "Lazy-initialized BrowserClient for all browser interaction."
+              },
+              {
+                "name": "screenshot",
+                "line": 189,
+                "doc": "Capture clean desktop as JPEG (grid overlay auto-hidden if active)."
+              },
+              {
+                "name": "screenshot_base64",
+                "line": 234,
+                "doc": "Capture screen as base64-encoded JPEG."
+              },
+              {
+                "name": "shell",
+                "line": 269,
+                "doc": "Execute shell command inside the container."
+              },
+              {
+                "name": "record_start",
+                "line": 292,
+                "doc": "Start screen recording using ffmpeg x11grab."
+              },
+              {
+                "name": "record_stop",
+                "line": 348,
+                "doc": "Stop active screen recording."
+              },
+              {
+                "name": "record_status",
+                "line": 400,
+                "doc": "Check if recording is active."
+              },
+              {
+                "name": "get_cursor_position",
+                "line": 412,
+                "doc": "Get current cursor position."
+              },
+              {
+                "name": "get_mouse_pos",
+                "line": 422,
+                "doc": "Get current mouse position."
+              }
+            ]
+          }
+        ],
+        "functions": [],
+        "lines": 428
+      },
+      "src/screenbox/desktop/a11y.py": {
+        "layer": "desktop",
+        "imports": [],
+        "classes": [
+          {
+            "name": "AccessibilityMixin",
+            "line": 6,
+            "doc": "AT-SPI accessibility methods for Desktop.",
+            "methods": [
+              {
+                "name": "accessibility_apps",
+                "line": 23,
+                "doc": "List accessible applications on the desktop via AT-SPI."
+              },
+              {
+                "name": "accessibility_tree",
+                "line": 44,
+                "doc": "Get accessibility tree for an app (or full desktop)."
+              },
+              {
+                "name": "accessibility_find",
+                "line": 104,
+                "doc": "Find accessible elements by role and/or name."
+              },
+              {
+                "name": "accessibility_activate",
+                "line": 163,
+                "doc": "Activate (click/press) an accessible element by its path."
+              },
+              {
+                "name": "accessibility_set_text",
+                "line": 226,
+                "doc": "Set text value on an accessible text element."
+              }
+            ]
+          }
+        ],
+        "functions": [],
+        "lines": 296
+      },
+      "src/screenbox/desktop/browser_proxy.py": {
+        "layer": "desktop",
+        "imports": [],
+        "classes": [
+          {
+            "name": "BrowserProxyMixin",
+            "line": 4,
+            "doc": "Browser interaction forwarded to Chrome extension.",
+            "methods": [
+              {
+                "name": "navigate",
+                "line": 12,
+                "doc": ""
+              },
+              {
+                "name": "semantics",
+                "line": 15,
+                "doc": ""
+              },
+              {
+                "name": "get_page_info",
+                "line": 18,
+                "doc": ""
+              },
+              {
+                "name": "execute_js",
+                "line": 21,
+                "doc": ""
+              },
+              {
+                "name": "go_back",
+                "line": 24,
+                "doc": ""
+              },
+              {
+                "name": "go_forward",
+                "line": 27,
+                "doc": ""
+              },
+              {
+                "name": "get_tabs",
+                "line": 32,
+                "doc": ""
+              },
+              {
+                "name": "new_tab",
+                "line": 35,
+                "doc": ""
+              },
+              {
+                "name": "close_tab",
+                "line": 38,
+                "doc": ""
+              },
+              {
+                "name": "switch_tab",
+                "line": 41,
+                "doc": ""
+              },
+              {
+                "name": "get_cookies",
+                "line": 46,
+                "doc": ""
+              },
+              {
+                "name": "set_cookies",
+                "line": 49,
+                "doc": ""
+              },
+              {
+                "name": "clear_cookies",
+                "line": 52,
+                "doc": ""
+              },
+              {
+                "name": "ext_click",
+                "line": 57,
+                "doc": ""
+              },
+              {
+                "name": "ext_type",
+                "line": 60,
+                "doc": ""
+              },
+              {
+                "name": "get_content",
+                "line": 63,
+                "doc": ""
+              },
+              {
+                "name": "save_pdf",
+                "line": 71,
+                "doc": ""
+              },
+              {
+                "name": "dom_snapshot",
+                "line": 74,
+                "doc": ""
+              },
+              {
+                "name": "performance_metrics",
+                "line": 77,
+                "doc": ""
+              },
+              {
+                "name": "emulate_device",
+                "line": 80,
+                "doc": ""
+              },
+              {
+                "name": "set_geolocation",
+                "line": 83,
+                "doc": ""
+              },
+              {
+                "name": "ignore_ssl_errors",
+                "line": 86,
+                "doc": ""
+              },
+              {
+                "name": "health_check",
+                "line": 91,
+                "doc": ""
+              },
+              {
+                "name": "chrome_ready",
+                "line": 94,
+                "doc": ""
+              },
+              {
+                "name": "browser_screenshot",
+                "line": 99,
+                "doc": ""
+              },
+              {
+                "name": "console_start",
+                "line": 102,
+                "doc": ""
+              },
+              {
+                "name": "console_stop",
+                "line": 105,
+                "doc": ""
+              },
+              {
+                "name": "console_get",
+                "line": 108,
+                "doc": ""
+              },
+              {
+                "name": "network_get",
+                "line": 111,
+                "doc": ""
+              },
+              {
+                "name": "chrome_search",
+                "line": 116,
+                "doc": ""
+              }
+            ]
+          }
+        ],
+        "functions": [],
+        "lines": 118
+      },
+      "src/screenbox/desktop/ext_client.py": {
+        "layer": "desktop",
+        "imports": [],
+        "classes": [
+          {
+            "name": "ExtensionClient",
+            "line": 10,
+            "doc": "WebSocket client to communicate with Chrome extension via ws-bridge.",
+            "methods": [
+              {
+                "name": "send_command",
+                "line": 141,
+                "doc": "Send command to extension and wait for response."
+              },
+              {
+                "name": "close",
+                "line": 170,
+                "doc": ""
+              },
+              {
+                "name": "connected",
+                "line": 202,
+                "doc": ""
+              }
+            ]
+          }
+        ],
+        "functions": [],
+        "lines": 204
+      },
+      "src/screenbox/desktop/find.py": {
+        "layer": "desktop",
+        "imports": [],
+        "classes": [
+          {
+            "name": "FindMixin",
+            "line": 6,
+            "doc": "Screen search, text location, and menu navigation via OCR.",
+            "methods": [
+              {
+                "name": "find_on_screen",
+                "line": 18,
+                "doc": "Find text on screen via screenshot + OCR (requires tesseract)."
+              },
+              {
+                "name": "click_on_text",
+                "line": 53,
+                "doc": "Find text on screen via OCR and click its center."
+              },
+              {
+                "name": "wait_for_text",
+                "line": 67,
+                "doc": "Poll OCR until text appears on screen."
+              },
+              {
+                "name": "smart_click",
+                "line": 89,
+                "doc": "Approximate click + OCR zoom = precise click."
+              },
+              {
+                "name": "wait_for",
+                "line": 149,
+                "doc": "Wait for a condition on the desktop."
+              },
+              {
+                "name": "menu_click",
+                "line": 196,
+                "doc": "Navigate and click through a menu path like 'File > Save As'."
+              }
+            ]
+          }
+        ],
+        "functions": [],
+        "lines": 280
+      },
+      "src/screenbox/desktop/grid.py": {
+        "layer": "desktop",
+        "imports": [],
+        "classes": [
+          {
+            "name": "GridMixin",
+            "line": 19,
+            "doc": "Grid methods extracted from Desktop class.",
+            "methods": [
+              {
+                "name": "set_grid",
+                "line": 37,
+                "doc": "Set the unified grid dimensions. Persisted in manager across Desktop instances."
+              },
+              {
+                "name": "screenshot_grid",
+                "line": 81,
+                "doc": "Capture screen as square JPEG with numbered grid overlay."
+              },
+              {
+                "name": "click_cell",
+                "line": 212,
+                "doc": "Click within a numbered grid cell. Returns OCR around cursor."
+              },
+              {
+                "name": "move_to_cell",
+                "line": 222,
+                "doc": "Move cursor to a position within a numbered grid cell. Returns OCR around cursor."
+              },
+              {
+                "name": "look_at_cell",
+                "line": 232,
+                "doc": "OCR around cell position WITHOUT moving the mouse. Scout before clicking."
+              },
+              {
+                "name": "dashboard_grid",
+                "line": 241,
+                "doc": "Toggle numbered grid overlay on the live VNC desktop (visual debug layer)."
+              },
+              {
+                "name": "grid_on",
+                "line": 263,
+                "doc": ""
+              },
+              {
+                "name": "grid_off",
+                "line": 266,
+                "doc": ""
+              },
+              {
+                "name": "grid_screenshot",
+                "line": 269,
+                "doc": "Take screenshot and divide into numbered grid cells."
+              }
+            ]
+          }
+        ],
+        "functions": [],
+        "lines": 316
+      },
+      "src/screenbox/desktop/input.py": {
+        "layer": "desktop",
+        "imports": [],
+        "classes": [
+          {
+            "name": "InputMixin",
+            "line": 15,
+            "doc": "Mouse, keyboard, clipboard, window management, and overlay methods.",
+            "methods": [
+              {
+                "name": "screenshot_square",
+                "line": 18,
+                "doc": "Capture screen as 1000x1000 JPEG with cursor marker and info panel."
+              },
+              {
+                "name": "hover_percent",
+                "line": 77,
+                "doc": "Move cursor by percentage of screen size from current position."
+              },
+              {
+                "name": "click",
+                "line": 116,
+                "doc": "Click at (x, y). button: 1=left, 2=middle, 3=right."
+              },
+              {
+                "name": "double_click",
+                "line": 131,
+                "doc": "Double-click at (x, y)."
+              },
+              {
+                "name": "mouse_move",
+                "line": 138,
+                "doc": "Move mouse to (x, y)."
+              },
+              {
+                "name": "mouse_down",
+                "line": 142,
+                "doc": "Press mouse button at (x, y) without releasing."
+              },
+              {
+                "name": "mouse_up",
+                "line": 147,
+                "doc": "Release mouse button at (x, y)."
+              },
+              {
+                "name": "type_text",
+                "line": 167,
+                "doc": "Type text string. delay in ms between keystrokes."
+              },
+              {
+                "name": "key",
+                "line": 178,
+                "doc": "Press key combination. E.g. 'ctrl+c', 'Return', 'alt+F4'."
+              },
+              {
+                "name": "scroll",
+                "line": 187,
+                "doc": "Scroll. direction: up/down/left/right."
+              },
+              {
+                "name": "drag",
+                "line": 202,
+                "doc": "Drag from (x1,y1) to (x2,y2)."
+              },
+              {
+                "name": "right_click",
+                "line": 215,
+                "doc": "Right-click at (x, y)."
+              },
+              {
+                "name": "hover",
+                "line": 219,
+                "doc": "Move mouse to (x, y) and optionally wait."
+              },
+              {
+                "name": "get_clipboard",
+                "line": 227,
+                "doc": "Get clipboard content."
+              },
+              {
+                "name": "set_clipboard",
+                "line": 232,
+                "doc": "Set clipboard content."
+              },
+              {
+                "name": "get_windows",
+                "line": 268,
+                "doc": "List application windows (filters out panels, desktop, overlays)."
+              },
+              {
+                "name": "activate_window",
+                "line": 315,
+                "doc": "Activate (focus) a window by ID. Uses active window if no ID given."
+              },
+              {
+                "name": "minimize_window",
+                "line": 322,
+                "doc": "Minimize a window. Uses active window if no ID given."
+              },
+              {
+                "name": "get_windows_near",
+                "line": 329,
+                "doc": "Get windows overlapping a circle around (x, y) with z-order."
+              },
+              {
+                "name": "maximize_window",
+                "line": 406,
+                "doc": "Maximize the active window via key combo."
+              },
+              {
+                "name": "close_window",
+                "line": 410,
+                "doc": "Close a window."
+              },
+              {
+                "name": "window_move",
+                "line": 417,
+                "doc": "Move a window. If no window_id, moves active window."
+              },
+              {
+                "name": "window_restore",
+                "line": 424,
+                "doc": "Restore minimized/maximized window to normal size."
+              },
+              {
+                "name": "show_desktop",
+                "line": 431,
+                "doc": "Minimize all windows."
+              },
+              {
+                "name": "window_resize",
+                "line": 435,
+                "doc": "Resize a window. If no window_id, resizes active window."
+              },
+              {
+                "name": "overlay_mode",
+                "line": 444,
+                "doc": "Set click indicator display mode."
+              }
+            ]
+          }
+        ],
+        "functions": [],
+        "lines": 461
+      },
+      "src/screenbox/desktop/ocr.py": {
+        "layer": "desktop",
+        "imports": [],
+        "classes": [
+          {
+            "name": "OCRMixin",
+            "line": 23,
+            "doc": "OCR-related methods for Desktop.",
+            "methods": [
+              {
+                "name": "look_at_cursor",
+                "line": 90,
+                "doc": "OCR around current cursor position WITHOUT moving it."
+              },
+              {
+                "name": "get_caret_position",
+                "line": 102,
+                "doc": "Get text caret position via AT-SPI focused widget."
+              },
+              {
+                "name": "look_at_caret",
+                "line": 154,
+                "doc": "OCR around text caret position (not mouse cursor)."
+              },
+              {
+                "name": "inspect_cell",
+                "line": 177,
+                "doc": "Crop grid cell (1-2 levels), run OCR, return elements with absolute screen coords."
+              },
+              {
+                "name": "observe",
+                "line": 269,
+                "doc": "OCR around current mouse position. Move mouse approximately where you need, then call this."
+              },
+              {
+                "name": "inspect_area",
+                "line": 281,
+                "doc": "Crop area around (x,y), zoom it, run OCR, return elements with absolute screen coords."
+              }
+            ]
+          }
+        ],
+        "functions": [],
+        "lines": 541
+      },
+      "src/screenbox/events.py": {
+        "layer": "core",
+        "imports": [],
+        "classes": [
+          {
+            "name": "EventBus",
+            "line": 17,
+            "doc": "Thread-safe event bus with async subscriber queues.",
+            "methods": [
+              {
+                "name": "subscribe",
+                "line": 24,
+                "doc": "Create a new subscriber queue."
+              },
+              {
+                "name": "unsubscribe",
+                "line": 32,
+                "doc": "Remove a subscriber queue."
+              },
+              {
+                "name": "emit",
+                "line": 38,
+                "doc": "Emit event to all subscribers. Thread-safe."
+              },
+              {
+                "name": "subscriber_count",
+                "line": 62,
+                "doc": ""
+              }
+            ]
+          }
+        ],
+        "functions": [],
+        "lines": 68
+      },
+      "src/screenbox/globals.py": {
+        "layer": "core",
+        "imports": [],
+        "classes": [],
+        "functions": [
+          {
+            "name": "get_logger",
+            "line": 86,
+            "doc": "Get or create an ActionLogger for a desktop session."
+          },
+          {
+            "name": "log_action",
+            "line": 98,
+            "doc": "Log a tool invocation to the desktop's action log."
+          },
+          {
+            "name": "format_recent_actions",
+            "line": 115,
+            "doc": "Format last N actions as a compact [RECENT ACTIONS] block for injection."
+          },
+          {
+            "name": "get_desktop",
+            "line": 148,
+            "doc": "Get Desktop interaction object, validating ID and state."
+          }
+        ],
+        "lines": 349
+      },
+      "src/screenbox/http_api.py": {
+        "layer": "api",
+        "imports": [],
+        "classes": [],
+        "functions": [
+          {
+            "name": "register",
+            "line": 108,
+            "doc": "Register all HTTP API routes on the FastMCP server."
+          }
+        ],
+        "lines": 1151
+      },
+      "src/screenbox/knowledge.py": {
+        "layer": "knowledge",
+        "imports": [],
+        "classes": [
+          {
+            "name": "DesktopInfo",
+            "line": 115,
+            "doc": "Cached system info for a desktop container.",
+            "methods": [
+              {
+                "name": "get",
+                "line": 121,
+                "doc": "Get or probe desktop system info. Cached per desktop_id."
+              },
+              {
+                "name": "invalidate",
+                "line": 129,
+                "doc": "Clear cache for a desktop."
+              }
+            ]
+          },
+          {
+            "name": "KnowledgeStore",
+            "line": 217,
+            "doc": "Typed knowledge storage with flow support and cross-references.",
+            "methods": [
+              {
+                "name": "list_all",
+                "line": 326,
+                "doc": "List knowledge entries. With desktop_id: only desktop-specific entries."
+              },
+              {
+                "name": "list_desktops",
+                "line": 333,
+                "doc": "List desktop IDs that have their own knowledge."
+              },
+              {
+                "name": "add_fact",
+                "line": 392,
+                "doc": "Add a knowledge fact. Returns the new fact."
+              },
+              {
+                "name": "search",
+                "line": 419,
+                "doc": "Search facts by trigger word overlap. Returns most relevant facts."
+              },
+              {
+                "name": "search_flows",
+                "line": 444,
+                "doc": "Find matching flows by trigger overlap."
+              },
+              {
+                "name": "get_outline",
+                "line": 471,
+                "doc": "Get compact outline of all knowledge for an entry."
+              },
+              {
+                "name": "get_desktop_info",
+                "line": 489,
+                "doc": "Get cached system info for a desktop."
+              },
+              {
+                "name": "get_hints_for_window",
+                "line": 493,
+                "doc": "Build knowledge hints: app knowledge + matching flows + resolved references."
+              },
+              {
+                "name": "get_active_app",
+                "line": 566,
+                "doc": "Get last detected app slug for a desktop."
+              }
+            ]
+          }
+        ],
+        "functions": [
+          {
+            "name": "detect_app",
+            "line": 81,
+            "doc": "Detect app from window title. Returns (slug, display_name) or (None, None)."
+          },
+          {
+            "name": "get_store",
+            "line": 575,
+            "doc": "Get or create the global KnowledgeStore."
+          }
+        ],
+        "lines": 583
+      },
+      "src/screenbox/logger.py": {
+        "layer": "core",
+        "imports": [],
+        "classes": [
+          {
+            "name": "ActionLogger",
+            "line": 48,
+            "doc": "JSONL action logger for a desktop session.",
+            "methods": [
+              {
+                "name": "log",
+                "line": 75,
+                "doc": "Write one structured action entry."
+              },
+              {
+                "name": "read_recent",
+                "line": 124,
+                "doc": "Read last N action entries from the flat log file."
+              },
+              {
+                "name": "close",
+                "line": 148,
+                "doc": "Mark session as ended in the index."
+              }
+            ]
+          }
+        ],
+        "functions": [
+          {
+            "name": "log_lifecycle",
+            "line": 204,
+            "doc": "Log lifecycle event (create/destroy/pause/resume) to events.jsonl."
+          }
+        ],
+        "lines": 235
+      },
+      "src/screenbox/manager.py": {
+        "layer": "manager",
+        "imports": [],
+        "classes": [
+          {
+            "name": "DesktopState",
+            "line": 50,
+            "doc": "",
+            "methods": []
+          },
+          {
+            "name": "DesktopInfo",
+            "line": 65,
+            "doc": "",
+            "methods": []
+          },
+          {
+            "name": "DesktopManager",
+            "line": 85,
+            "doc": "Manages Docker containers as virtual desktops.",
+            "methods": [
+              {
+                "name": "list_desktops",
+                "line": 326,
+                "doc": "List all desktops with their state."
+              },
+              {
+                "name": "create",
+                "line": 341,
+                "doc": "Create and start a new desktop container."
+              },
+              {
+                "name": "destroy",
+                "line": 537,
+                "doc": "Stop and remove a desktop container."
+              },
+              {
+                "name": "pause",
+                "line": 568,
+                "doc": "Pause (freeze) a running desktop. Auto-saves snapshot first."
+              },
+              {
+                "name": "resume",
+                "line": 587,
+                "doc": "Resume (unfreeze) a paused desktop."
+              },
+              {
+                "name": "stop",
+                "line": 615,
+                "doc": "Stop a running desktop container."
+              },
+              {
+                "name": "start",
+                "line": 632,
+                "doc": "Start a stopped desktop container."
+              },
+              {
+                "name": "snapshot",
+                "line": 649,
+                "doc": "Save /home/screenbox from container as tar.gz snapshot."
+              },
+              {
+                "name": "restore",
+                "line": 717,
+                "doc": "Restore /home/screenbox from a snapshot into a running container."
+              },
+              {
+                "name": "list_snapshots",
+                "line": 780,
+                "doc": "List available snapshots for a desktop."
+              },
+              {
+                "name": "file_upload",
+                "line": 850,
+                "doc": "Upload file into container via docker cp."
+              },
+              {
+                "name": "file_download",
+                "line": 896,
+                "doc": "Download file from container via docker cp."
+              },
+              {
+                "name": "file_ls",
+                "line": 915,
+                "doc": "List files in container."
+              },
+              {
+                "name": "file_upload_tar",
+                "line": 934,
+                "doc": "Upload and extract a tar.gz archive into container."
+              },
+              {
+                "name": "disk_usage",
+                "line": 969,
+                "doc": "Get disk usage of key directories inside container."
+              },
+              {
+                "name": "snapshot_clone",
+                "line": 999,
+                "doc": "Clone a snapshot from one desktop to another."
+              },
+              {
+                "name": "get_memory_info",
+                "line": 1024,
+                "doc": "Read cgroup memory usage for a desktop container."
+              },
+              {
+                "name": "get",
+                "line": 1061,
+                "doc": "Get desktop info, refreshing state from Docker if stale."
+              },
+              {
+                "name": "touch",
+                "line": 1083,
+                "doc": "Update last_tool_call timestamp."
+              },
+              {
+                "name": "exec",
+                "line": 1089,
+                "doc": "Execute command inside a desktop container."
+              },
+              {
+                "name": "wait_ready",
+                "line": 1101,
+                "doc": "Wait for desktop core services: X display + ws-bridge."
+              },
+              {
+                "name": "lease_ttl",
+                "line": 1135,
+                "doc": "Lease TTL in seconds. 0 = no expiry."
+              },
+              {
+                "name": "acquire",
+                "line": 1139,
+                "doc": "Acquire exclusive lock on a desktop for an agent."
+              },
+              {
+                "name": "release",
+                "line": 1166,
+                "doc": "Release agent lock on a desktop."
+              },
+              {
+                "name": "heartbeat",
+                "line": 1183,
+                "doc": "Refresh agent lock timestamp (keep-alive)."
+              },
+              {
+                "name": "validate_session",
+                "line": 1191,
+                "doc": "Validate agent access and optionally session token."
+              },
+              {
+                "name": "smart_acquire",
+                "line": 1211,
+                "doc": "Smart acquire: reuse existing, pick idle, or fail with guidance."
+              },
+              {
+                "name": "delete_snapshots",
+                "line": 1260,
+                "doc": "Delete all snapshots for a desktop."
+              },
+              {
+                "name": "check_idle_desktops",
+                "line": 1271,
+                "doc": "Pause idle desktops and auto-release expired leases. Returns list of paused IDs."
+              },
+              {
+                "name": "start_idle_checker",
+                "line": 1328,
+                "doc": "Start background thread to check for idle desktops."
+              }
+            ]
+          }
+        ],
+        "functions": [],
+        "lines": 1342
+      },
+      "src/screenbox/registry.py": {
+        "layer": "registry",
+        "imports": [],
+        "classes": [
+          {
+            "name": "Registry",
+            "line": 23,
+            "doc": "SQLite-backed agent registry with per-thread connections.",
+            "methods": [
+              {
+                "name": "close",
+                "line": 88,
+                "doc": ""
+              },
+              {
+                "name": "register_agent",
+                "line": 97,
+                "doc": "Register new agent. Returns api_key (shown once, not stored)."
+              },
+              {
+                "name": "list_agents",
+                "line": 115,
+                "doc": ""
+              },
+              {
+                "name": "suspend_agent",
+                "line": 121,
+                "doc": "Suspend agent -- invalidates all sessions."
+              },
+              {
+                "name": "activate_agent",
+                "line": 134,
+                "doc": ""
+              },
+              {
+                "name": "delete_agent",
+                "line": 141,
+                "doc": "Delete agent, sessions, and assignments."
+              },
+              {
+                "name": "reset_agent_key",
+                "line": 149,
+                "doc": "Generate new API key for agent. Returns new key or None."
+              },
+              {
+                "name": "login",
+                "line": 169,
+                "doc": "Authenticate agent, create session. Returns session token or None."
+              },
+              {
+                "name": "validate_session",
+                "line": 193,
+                "doc": "Validate session token. Returns {agent_id, source_ip} or None."
+              },
+              {
+                "name": "logout",
+                "line": 213,
+                "doc": ""
+              },
+              {
+                "name": "list_sessions",
+                "line": 218,
+                "doc": "All active sessions with agent info."
+              },
+              {
+                "name": "assign_desktop",
+                "line": 245,
+                "doc": "Assign desktop to agent. Fails if already assigned to another."
+              },
+              {
+                "name": "release_desktop",
+                "line": 262,
+                "doc": "Admin-only: release desktop assignment."
+              },
+              {
+                "name": "get_assignment",
+                "line": 271,
+                "doc": "Get agent_id assigned to desktop, or None."
+              },
+              {
+                "name": "get_agent_desktops",
+                "line": 279,
+                "doc": "Get all desktop IDs assigned to an agent."
+              },
+              {
+                "name": "lock_desktop",
+                "line": 289,
+                "doc": ""
+              },
+              {
+                "name": "unlock_desktop",
+                "line": 298,
+                "doc": ""
+              },
+              {
+                "name": "is_locked",
+                "line": 304,
+                "doc": ""
+              },
+              {
+                "name": "get_lock",
+                "line": 311,
+                "doc": ""
+              },
+              {
+                "name": "list_assignments",
+                "line": 318,
+                "doc": "All desktop assignments."
+              },
+              {
+                "name": "create_share",
+                "line": 330,
+                "doc": "Create a share link for a desktop. Returns {token, expires_at}."
+              },
+              {
+                "name": "validate_share",
+                "line": 345,
+                "doc": "Validate share token. Returns {desktop_id, created_by, expires_at} or None."
+              },
+              {
+                "name": "revoke_share",
+                "line": 360,
+                "doc": "Revoke a single share link."
+              },
+              {
+                "name": "revoke_desktop_shares",
+                "line": 366,
+                "doc": "Revoke all share links for a desktop. Returns count revoked."
+              },
+              {
+                "name": "revoke_all_shares",
+                "line": 374,
+                "doc": "Admin: revoke all share links. Returns count revoked."
+              },
+              {
+                "name": "list_shares",
+                "line": 380,
+                "doc": "List active (non-expired) share links. Optionally filter by desktop."
+              },
+              {
+                "name": "cleanup_expired_shares",
+                "line": 399,
+                "doc": "Remove expired share links. Returns count removed."
+              }
+            ]
+          }
+        ],
+        "functions": [],
+        "lines": 406
+      },
+      "src/screenbox/request_context.py": {
+        "layer": "core",
+        "imports": [],
+        "classes": [],
+        "functions": [
+          {
+            "name": "get_current_agent",
+            "line": 37,
+            "doc": "Get agent_id for current request, or None if unauthenticated."
+          },
+          {
+            "name": "get_current_role",
+            "line": 46,
+            "doc": "Get role for current request: 'admin', 'agent', or 'anonymous'."
+          },
+          {
+            "name": "is_admin",
+            "line": 51,
+            "doc": "Check if current request has admin privileges."
+          },
+          {
+            "name": "get_current_ip",
+            "line": 56,
+            "doc": "Get source IP for current request."
+          },
+          {
+            "name": "set_identity",
+            "line": 61,
+            "doc": "Set identity for current request context."
+          },
+          {
+            "name": "clear_identity",
+            "line": 69,
+            "doc": "Clear identity after request."
+          },
+          {
+            "name": "resolve_api_key",
+            "line": 76,
+            "doc": "Resolve API key to (agent_id, role)."
+          }
+        ],
+        "lines": 101
+      },
+      "src/screenbox/server.py": {
+        "layer": "server",
+        "imports": [],
+        "classes": [],
+        "functions": [
+          {
+            "name": "main",
+            "line": 131,
+            "doc": ""
+          }
+        ],
+        "lines": 165
+      },
+      "src/screenbox/tools/__init__.py": {
+        "layer": "tools",
+        "imports": [],
+        "classes": [],
+        "functions": [
+          {
+            "name": "get_window_title",
+            "line": 9,
+            "doc": "Get active window title from desktop container."
+          },
+          {
+            "name": "inject_knowledge",
+            "line": 17,
+            "doc": "Get knowledge hints for current active app. Returns hint string or empty."
+          },
+          {
+            "name": "register_all",
+            "line": 34,
+            "doc": "Register all MCP tools on the FastMCP instance."
+          }
+        ],
+        "lines": 58
+      },
+      "src/screenbox/tools/batch.py": {
+        "layer": "tools",
+        "imports": [],
+        "classes": [],
+        "functions": [
+          {
+            "name": "register",
+            "line": 67,
+            "doc": ""
+          }
+        ],
+        "lines": 170
+      },
+      "src/screenbox/tools/chrome.py": {
+        "layer": "tools",
+        "imports": [],
+        "classes": [],
+        "functions": [
+          {
+            "name": "register",
+            "line": 7,
+            "doc": ""
+          }
+        ],
+        "lines": 166
+      },
+      "src/screenbox/tools/click.py": {
+        "layer": "tools",
+        "imports": [
+          {
+            "from": "screenbox.tools.watch",
+            "names": [
+              "_run_watch"
+            ]
+          }
+        ],
+        "classes": [],
+        "functions": [
+          {
+            "name": "register",
+            "line": 73,
+            "doc": ""
+          }
+        ],
+        "lines": 146
+      },
+      "src/screenbox/tools/file.py": {
+        "layer": "tools",
+        "imports": [],
+        "classes": [],
+        "functions": [
+          {
+            "name": "register",
+            "line": 7,
+            "doc": ""
+          }
+        ],
+        "lines": 72
+      },
+      "src/screenbox/tools/find.py": {
+        "layer": "tools",
+        "imports": [],
+        "classes": [],
+        "functions": [
+          {
+            "name": "register",
+            "line": 7,
+            "doc": ""
+          }
+        ],
+        "lines": 333
+      },
+      "src/screenbox/tools/help.py": {
+        "layer": "tools",
+        "imports": [],
+        "classes": [],
+        "functions": [
+          {
+            "name": "register",
+            "line": 5,
+            "doc": ""
+          }
+        ],
+        "lines": 45
+      },
+      "src/screenbox/tools/info.py": {
+        "layer": "tools",
+        "imports": [],
+        "classes": [],
+        "functions": [
+          {
+            "name": "register",
+            "line": 6,
+            "doc": ""
+          }
+        ],
+        "lines": 198
+      },
+      "src/screenbox/tools/input.py": {
+        "layer": "tools",
+        "imports": [],
+        "classes": [],
+        "functions": [
+          {
+            "name": "register",
+            "line": 6,
+            "doc": ""
+          }
+        ],
+        "lines": 113
+      },
+      "src/screenbox/tools/knowledge_tools.py": {
+        "layer": "tools",
+        "imports": [],
+        "classes": [],
+        "functions": [
+          {
+            "name": "register",
+            "line": 11,
+            "doc": ""
+          }
+        ],
+        "lines": 187
+      },
+      "src/screenbox/tools/look.py": {
+        "layer": "tools",
+        "imports": [],
+        "classes": [],
+        "functions": [
+          {
+            "name": "register",
+            "line": 15,
+            "doc": ""
+          }
+        ],
+        "lines": 154
+      },
+      "src/screenbox/tools/manage.py": {
+        "layer": "tools",
+        "imports": [
+          {
+            "from": "screenbox",
+            "names": [
+              "config",
+              "desktop",
+              "logger",
+              "manager"
+            ]
+          }
+        ],
+        "classes": [],
+        "functions": [
+          {
+            "name": "register",
+            "line": 21,
+            "doc": ""
+          }
+        ],
+        "lines": 838
+      },
+      "src/screenbox/tools/screenshot.py": {
+        "layer": "tools",
+        "imports": [],
+        "classes": [],
+        "functions": [
+          {
+            "name": "register",
+            "line": 45,
+            "doc": ""
+          }
+        ],
+        "lines": 244
+      },
+      "src/screenbox/tools/watch.py": {
+        "layer": "tools",
+        "imports": [],
+        "classes": [],
+        "functions": [
+          {
+            "name": "register",
+            "line": 62,
+            "doc": ""
+          }
+        ],
+        "lines": 149
+      },
+      "src/screenbox/tools/window.py": {
+        "layer": "tools",
+        "imports": [],
+        "classes": [],
+        "functions": [
+          {
+            "name": "register",
+            "line": 6,
+            "doc": ""
+          }
+        ],
+        "lines": 80
+      },
+      "src/screenbox/vision.py": {
+        "layer": "core",
+        "imports": [],
+        "classes": [],
+        "functions": [
+          {
+            "name": "crop_screenshot",
+            "line": 26,
+            "doc": "Crop screenshot to region."
+          },
+          {
+            "name": "normalize_screenshot",
+            "line": 59,
+            "doc": "Resize screenshot to fixed width, optionally pad to square."
+          },
+          {
+            "name": "grid_overlay",
+            "line": 101,
+            "doc": "Draw numbered grid overlay on screenshot."
+          },
+          {
+            "name": "enhance_screenshot",
+            "line": 163,
+            "doc": "Enhance screenshot for better visibility of dark-on-dark and light-on-light elements."
+          },
+          {
+            "name": "find_element",
+            "line": 229,
+            "doc": "Find UI element coordinates using Gemini Flash vision."
+          }
+        ],
+        "lines": 357
+      }
+    }
+  },
+  "tools": {
+    "all": [
+      {
+        "name": "desktop_batch",
+        "description": "Execute a sequence of actions in one call. Much faster than separate tool calls.",
+        "category": "batch",
+        "parameters": [
+          {
+            "name": "desktop_id",
+            "type": "str"
+          },
+          {
+            "name": "actions",
+            "type": "str"
+          },
+          {
+            "name": "intent",
+            "type": "str"
+          },
+          {
+            "name": "step",
+            "type": "str"
+          }
+        ],
+        "source": "src/screenbox/tools/batch.py:80"
+      },
+      {
+        "name": "desktop_chrome",
+        "description": "Chrome browser operations.",
+        "category": "chrome",
+        "parameters": [
+          {
+            "name": "desktop_id",
+            "type": "str"
+          },
+          {
+            "name": "action",
+            "type": "str"
+          },
+          {
+            "name": "url",
+            "type": "str"
+          },
+          {
+            "name": "script",
+            "type": "str"
+          },
+          {
+            "name": "selector",
+            "type": "str"
+          },
+          {
+            "name": "tab_id",
+            "type": "int"
+          },
+          {
+            "name": "timeout_ms",
+            "type": "int"
+          },
+          {
+            "name": "text",
+            "type": "str"
+          },
+          {
+            "name": "cookies_json",
+            "type": "str"
+          },
+          {
+            "name": "condition",
+            "type": "str"
+          },
+          {
+            "name": "ignore",
+            "type": "bool"
+          },
+          {
+            "name": "clear",
+            "type": "bool"
+          },
+          {
+            "name": "width",
+            "type": "int"
+          },
+          {
+            "name": "height",
+            "type": "int"
+          },
+          {
+            "name": "scale",
+            "type": "float"
+          },
+          {
+            "name": "mobile",
+            "type": "bool"
+          },
+          {
+            "name": "user_agent",
+            "type": "str"
+          },
+          {
+            "name": "latitude",
+            "type": "float"
+          },
+          {
+            "name": "longitude",
+            "type": "float"
+          },
+          {
+            "name": "intent",
+            "type": "str"
+          },
+          {
+            "name": "step",
+            "type": "str"
+          }
+        ],
+        "source": "src/screenbox/tools/chrome.py:10"
+      },
+      {
+        "name": "desktop_click",
+        "description": "Click at screen coordinates.",
+        "category": "click",
+        "parameters": [
+          {
+            "name": "desktop_id",
+            "type": "str"
+          },
+          {
+            "name": "x",
+            "type": "int"
+          },
+          {
+            "name": "y",
+            "type": "int"
+          },
+          {
+            "name": "button",
+            "type": "int"
+          },
+          {
+            "name": "clicks",
+            "type": "int"
+          },
+          {
+            "name": "observe",
+            "type": "bool"
+          },
+          {
+            "name": "wait",
+            "type": "bool"
+          },
+          {
+            "name": "ocr_radius",
+            "type": "int"
+          },
+          {
+            "name": "intent",
+            "type": "str"
+          },
+          {
+            "name": "step",
+            "type": "str"
+          }
+        ],
+        "source": "src/screenbox/tools/click.py:76"
+      },
+      {
+        "name": "desktop_file",
+        "description": "File operations in the desktop container.",
+        "category": "file",
+        "parameters": [
+          {
+            "name": "desktop_id",
+            "type": "str"
+          },
+          {
+            "name": "action",
+            "type": "str"
+          },
+          {
+            "name": "path",
+            "type": "str"
+          },
+          {
+            "name": "content_base64",
+            "type": "str"
+          },
+          {
+            "name": "dest_dir",
+            "type": "str"
+          },
+          {
+            "name": "intent",
+            "type": "str"
+          },
+          {
+            "name": "step",
+            "type": "str"
+          }
+        ],
+        "source": "src/screenbox/tools/file.py:10"
+      },
+      {
+        "name": "desktop_debug",
+        "description": "Debug/advanced element finding. NOT for normal agent workflow.",
+        "category": "find",
+        "parameters": [
+          {
+            "name": "desktop_id",
+            "type": "str"
+          },
+          {
+            "name": "action",
+            "type": "str"
+          },
+          {
+            "name": "query",
+            "type": "str"
+          },
+          {
+            "name": "text",
+            "type": "str"
+          },
+          {
+            "name": "click",
+            "type": "bool"
+          },
+          {
+            "name": "index",
+            "type": "int"
+          },
+          {
+            "name": "element",
+            "type": "str"
+          },
+          {
+            "name": "region",
+            "type": "str"
+          },
+          {
+            "name": "model",
+            "type": "str"
+          },
+          {
+            "name": "app_name",
+            "type": "str"
+          },
+          {
+            "name": "role",
+            "type": "str"
+          },
+          {
+            "name": "name",
+            "type": "str"
+          },
+          {
+            "name": "element_path",
+            "type": "str"
+          },
+          {
+            "name": "cell",
+            "type": "str"
+          },
+          {
+            "name": "cols",
+            "type": "int"
+          },
+          {
+            "name": "rows",
+            "type": "int"
+          },
+          {
+            "name": "path",
+            "type": "str"
+          },
+          {
+            "name": "start_x",
+            "type": "int"
+          },
+          {
+            "name": "start_y",
+            "type": "int"
+          },
+          {
+            "name": "timeout_ms",
+            "type": "int"
+          },
+          {
+            "name": "max_depth",
+            "type": "int"
+          },
+          {
+            "name": "x",
+            "type": "int"
+          },
+          {
+            "name": "y",
+            "type": "int"
+          },
+          {
+            "name": "radius",
+            "type": "int"
+          },
+          {
+            "name": "observe",
+            "type": "bool"
+          },
+          {
+            "name": "windows",
+            "type": "bool"
+          },
+          {
+            "name": "intent",
+            "type": "str"
+          },
+          {
+            "name": "step",
+            "type": "str"
+          }
+        ],
+        "source": "src/screenbox/tools/find.py:226"
+      },
+      {
+        "name": "desktop_help",
+        "description": "Screenbox interaction strategy guide. Call when unsure about workflow.",
+        "category": "help",
+        "parameters": [],
+        "source": "src/screenbox/tools/help.py:8"
+      },
+      {
+        "name": "desktop_type",
+        "description": "Type text on the active window via keyboard.",
+        "category": "input",
+        "parameters": [
+          {
+            "name": "desktop_id",
+            "type": "str"
+          },
+          {
+            "name": "text",
+            "type": "str"
+          },
+          {
+            "name": "delay",
+            "type": "int"
+          },
+          {
+            "name": "intent",
+            "type": "str"
+          },
+          {
+            "name": "step",
+            "type": "str"
+          }
+        ],
+        "source": "src/screenbox/tools/input.py:9"
+      },
+      {
+        "name": "desktop_key",
+        "description": "Press keyboard shortcut or key combination.",
+        "category": "input",
+        "parameters": [
+          {
+            "name": "desktop_id",
+            "type": "str"
+          },
+          {
+            "name": "keys",
+            "type": "str"
+          },
+          {
+            "name": "text",
+            "type": "str"
+          },
+          {
+            "name": "intent",
+            "type": "str"
+          },
+          {
+            "name": "step",
+            "type": "str"
+          }
+        ],
+        "source": "src/screenbox/tools/input.py:29"
+      },
+      {
+        "name": "desktop_shell",
+        "description": "Run shell command inside the desktop container.",
+        "category": "input",
+        "parameters": [
+          {
+            "name": "desktop_id",
+            "type": "str"
+          },
+          {
+            "name": "command",
+            "type": "str"
+          },
+          {
+            "name": "timeout",
+            "type": "int"
+          },
+          {
+            "name": "intent",
+            "type": "str"
+          },
+          {
+            "name": "step",
+            "type": "str"
+          }
+        ],
+        "source": "src/screenbox/tools/input.py:83"
+      },
+      {
+        "name": "desktop_add_knowledge",
+        "description": "Save a knowledge fact about an application for future sessions.",
+        "category": "knowledge_tools",
+        "parameters": [
+          {
+            "name": "desktop_id",
+            "type": "str"
+          },
+          {
+            "name": "app",
+            "type": "str"
+          },
+          {
+            "name": "fact",
+            "type": "str"
+          },
+          {
+            "name": "triggers",
+            "type": "str"
+          },
+          {
+            "name": "kind",
+            "type": "str"
+          },
+          {
+            "name": "intent",
+            "type": "str"
+          },
+          {
+            "name": "step",
+            "type": "str"
+          }
+        ],
+        "source": "src/screenbox/tools/knowledge_tools.py:14"
+      },
+      {
+        "name": "desktop_knowledge_search",
+        "description": "Search or list knowledge base.",
+        "category": "knowledge_tools",
+        "parameters": [
+          {
+            "name": "desktop_id",
+            "type": "str"
+          },
+          {
+            "name": "query",
+            "type": "str"
+          },
+          {
+            "name": "app",
+            "type": "str"
+          },
+          {
+            "name": "kind",
+            "type": "str"
+          },
+          {
+            "name": "intent",
+            "type": "str"
+          },
+          {
+            "name": "step",
+            "type": "str"
+          }
+        ],
+        "source": "src/screenbox/tools/knowledge_tools.py:62"
+      },
+      {
+        "name": "desktop_look",
+        "description": "OCR around grid cell or cursor. Returns REAL screen coordinates for clicking.",
+        "category": "look",
+        "parameters": [
+          {
+            "name": "desktop_id",
+            "type": "str"
+          },
+          {
+            "name": "cell",
+            "type": "int"
+          },
+          {
+            "name": "position",
+            "type": "str"
+          },
+          {
+            "name": "cell_size",
+            "type": "int"
+          },
+          {
+            "name": "ocr_radius",
+            "type": "int"
+          },
+          {
+            "name": "source",
+            "type": "str"
+          },
+          {
+            "name": "grid",
+            "type": "str"
+          },
+          {
+            "name": "intent",
+            "type": "str"
+          },
+          {
+            "name": "step",
+            "type": "str"
+          }
+        ],
+        "source": "src/screenbox/tools/look.py:18"
+      },
+      {
+        "name": "desktop_manage",
+        "description": "Desktop lifecycle, snapshots, and misc operations.",
+        "category": "manage",
+        "parameters": [
+          {
+            "name": "action",
+            "type": "str"
+          },
+          {
+            "name": "desktop_id",
+            "type": "Optional[str]"
+          },
+          {
+            "name": "label",
+            "type": "Optional[str]"
+          },
+          {
+            "name": "url",
+            "type": "Optional[str]"
+          },
+          {
+            "name": "resolution",
+            "type": "Optional[str]"
+          },
+          {
+            "name": "image",
+            "type": "Optional[str]"
+          },
+          {
+            "name": "confirm",
+            "type": "bool"
+          },
+          {
+            "name": "save_snapshot",
+            "type": "bool"
+          },
+          {
+            "name": "agent_id",
+            "type": "Optional[str]"
+          },
+          {
+            "name": "snapshot_name",
+            "type": "Optional[str]"
+          },
+          {
+            "name": "text",
+            "type": "Optional[str]"
+          },
+          {
+            "name": "cell_size",
+            "type": "int"
+          },
+          {
+            "name": "app",
+            "type": "Optional[str]"
+          },
+          {
+            "name": "app_args",
+            "type": "Optional[str]"
+          },
+          {
+            "name": "wait_ms",
+            "type": "int"
+          },
+          {
+            "name": "pid",
+            "type": "int"
+          },
+          {
+            "name": "proc_name",
+            "type": "Optional[str]"
+          },
+          {
+            "name": "signal",
+            "type": "int"
+          },
+          {
+            "name": "sort",
+            "type": "str"
+          },
+          {
+            "name": "direction",
+            "type": "str"
+          },
+          {
+            "name": "amount",
+            "type": "int"
+          },
+          {
+            "name": "x",
+            "type": "int"
+          },
+          {
+            "name": "y",
+            "type": "int"
+          },
+          {
+            "name": "x2",
+            "type": "int"
+          },
+          {
+            "name": "y2",
+            "type": "int"
+          },
+          {
+            "name": "button",
+            "type": "int"
+          },
+          {
+            "name": "timeout_ms",
+            "type": "int"
+          },
+          {
+            "name": "title",
+            "type": "Optional[str]"
+          },
+          {
+            "name": "threshold_ms",
+            "type": "int"
+          },
+          {
+            "name": "profile",
+            "type": "Optional[str]"
+          },
+          {
+            "name": "intent",
+            "type": "Optional[str]"
+          },
+          {
+            "name": "step",
+            "type": "Optional[str]"
+          }
+        ],
+        "source": "src/screenbox/tools/manage.py:202"
+      },
+      {
+        "name": "desktop_screenshot",
+        "description": "Screenshot the desktop. Returns normalized 1000x1000 image with grid overlay.",
+        "category": "screenshot",
+        "parameters": [
+          {
+            "name": "desktop_id",
+            "type": "str"
+          },
+          {
+            "name": "region",
+            "type": "str"
+          },
+          {
+            "name": "cell",
+            "type": "str"
+          },
+          {
+            "name": "grid",
+            "type": "str"
+          },
+          {
+            "name": "enhance",
+            "type": "bool"
+          },
+          {
+            "name": "normalize_width",
+            "type": "int"
+          },
+          {
+            "name": "intent",
+            "type": "str"
+          },
+          {
+            "name": "step",
+            "type": "str"
+          }
+        ],
+        "source": "src/screenbox/tools/screenshot.py:159"
+      },
+      {
+        "name": "desktop_wait_stable",
+        "description": "Wait until screen region stops changing (stabilizes).",
+        "category": "watch",
+        "parameters": [
+          {
+            "name": "desktop_id",
+            "type": "str"
+          },
+          {
+            "name": "region",
+            "type": "str"
+          },
+          {
+            "name": "timeout",
+            "type": "float"
+          },
+          {
+            "name": "intent",
+            "type": "str"
+          },
+          {
+            "name": "step",
+            "type": "str"
+          }
+        ],
+        "source": "src/screenbox/tools/watch.py:65"
+      },
+      {
+        "name": "desktop_wait_change",
+        "description": "Wait until something changes in screen region.",
+        "category": "watch",
+        "parameters": [
+          {
+            "name": "desktop_id",
+            "type": "str"
+          },
+          {
+            "name": "region",
+            "type": "str"
+          },
+          {
+            "name": "timeout",
+            "type": "float"
+          },
+          {
+            "name": "intent",
+            "type": "str"
+          },
+          {
+            "name": "step",
+            "type": "str"
+          }
+        ],
+        "source": "src/screenbox/tools/watch.py:108"
+      },
+      {
+        "name": "desktop_window",
+        "description": "Window management operations.",
+        "category": "window",
+        "parameters": [
+          {
+            "name": "desktop_id",
+            "type": "str"
+          },
+          {
+            "name": "action",
+            "type": "str"
+          },
+          {
+            "name": "window_id",
+            "type": "str"
+          },
+          {
+            "name": "width",
+            "type": "int"
+          },
+          {
+            "name": "height",
+            "type": "int"
+          },
+          {
+            "name": "x",
+            "type": "int"
+          },
+          {
+            "name": "y",
+            "type": "int"
+          },
+          {
+            "name": "intent",
+            "type": "str"
+          },
+          {
+            "name": "step",
+            "type": "str"
+          }
+        ],
+        "source": "src/screenbox/tools/window.py:9"
+      }
+    ],
+    "by_category": {
+      "batch": [
+        {
+          "name": "desktop_batch",
+          "description": "Execute a sequence of actions in one call. Much faster than separate tool calls.",
+          "category": "batch",
+          "parameters": [
+            {
+              "name": "desktop_id",
+              "type": "str"
+            },
+            {
+              "name": "actions",
+              "type": "str"
+            },
+            {
+              "name": "intent",
+              "type": "str"
+            },
+            {
+              "name": "step",
+              "type": "str"
+            }
+          ],
+          "source": "src/screenbox/tools/batch.py:80"
+        }
+      ],
+      "chrome": [
+        {
+          "name": "desktop_chrome",
+          "description": "Chrome browser operations.",
+          "category": "chrome",
+          "parameters": [
+            {
+              "name": "desktop_id",
+              "type": "str"
+            },
+            {
+              "name": "action",
+              "type": "str"
+            },
+            {
+              "name": "url",
+              "type": "str"
+            },
+            {
+              "name": "script",
+              "type": "str"
+            },
+            {
+              "name": "selector",
+              "type": "str"
+            },
+            {
+              "name": "tab_id",
+              "type": "int"
+            },
+            {
+              "name": "timeout_ms",
+              "type": "int"
+            },
+            {
+              "name": "text",
+              "type": "str"
+            },
+            {
+              "name": "cookies_json",
+              "type": "str"
+            },
+            {
+              "name": "condition",
+              "type": "str"
+            },
+            {
+              "name": "ignore",
+              "type": "bool"
+            },
+            {
+              "name": "clear",
+              "type": "bool"
+            },
+            {
+              "name": "width",
+              "type": "int"
+            },
+            {
+              "name": "height",
+              "type": "int"
+            },
+            {
+              "name": "scale",
+              "type": "float"
+            },
+            {
+              "name": "mobile",
+              "type": "bool"
+            },
+            {
+              "name": "user_agent",
+              "type": "str"
+            },
+            {
+              "name": "latitude",
+              "type": "float"
+            },
+            {
+              "name": "longitude",
+              "type": "float"
+            },
+            {
+              "name": "intent",
+              "type": "str"
+            },
+            {
+              "name": "step",
+              "type": "str"
+            }
+          ],
+          "source": "src/screenbox/tools/chrome.py:10"
+        }
+      ],
+      "click": [
+        {
+          "name": "desktop_click",
+          "description": "Click at screen coordinates.",
+          "category": "click",
+          "parameters": [
+            {
+              "name": "desktop_id",
+              "type": "str"
+            },
+            {
+              "name": "x",
+              "type": "int"
+            },
+            {
+              "name": "y",
+              "type": "int"
+            },
+            {
+              "name": "button",
+              "type": "int"
+            },
+            {
+              "name": "clicks",
+              "type": "int"
+            },
+            {
+              "name": "observe",
+              "type": "bool"
+            },
+            {
+              "name": "wait",
+              "type": "bool"
+            },
+            {
+              "name": "ocr_radius",
+              "type": "int"
+            },
+            {
+              "name": "intent",
+              "type": "str"
+            },
+            {
+              "name": "step",
+              "type": "str"
+            }
+          ],
+          "source": "src/screenbox/tools/click.py:76"
+        }
+      ],
+      "file": [
+        {
+          "name": "desktop_file",
+          "description": "File operations in the desktop container.",
+          "category": "file",
+          "parameters": [
+            {
+              "name": "desktop_id",
+              "type": "str"
+            },
+            {
+              "name": "action",
+              "type": "str"
+            },
+            {
+              "name": "path",
+              "type": "str"
+            },
+            {
+              "name": "content_base64",
+              "type": "str"
+            },
+            {
+              "name": "dest_dir",
+              "type": "str"
+            },
+            {
+              "name": "intent",
+              "type": "str"
+            },
+            {
+              "name": "step",
+              "type": "str"
+            }
+          ],
+          "source": "src/screenbox/tools/file.py:10"
+        }
+      ],
+      "find": [
+        {
+          "name": "desktop_debug",
+          "description": "Debug/advanced element finding. NOT for normal agent workflow.",
+          "category": "find",
+          "parameters": [
+            {
+              "name": "desktop_id",
+              "type": "str"
+            },
+            {
+              "name": "action",
+              "type": "str"
+            },
+            {
+              "name": "query",
+              "type": "str"
+            },
+            {
+              "name": "text",
+              "type": "str"
+            },
+            {
+              "name": "click",
+              "type": "bool"
+            },
+            {
+              "name": "index",
+              "type": "int"
+            },
+            {
+              "name": "element",
+              "type": "str"
+            },
+            {
+              "name": "region",
+              "type": "str"
+            },
+            {
+              "name": "model",
+              "type": "str"
+            },
+            {
+              "name": "app_name",
+              "type": "str"
+            },
+            {
+              "name": "role",
+              "type": "str"
+            },
+            {
+              "name": "name",
+              "type": "str"
+            },
+            {
+              "name": "element_path",
+              "type": "str"
+            },
+            {
+              "name": "cell",
+              "type": "str"
+            },
+            {
+              "name": "cols",
+              "type": "int"
+            },
+            {
+              "name": "rows",
+              "type": "int"
+            },
+            {
+              "name": "path",
+              "type": "str"
+            },
+            {
+              "name": "start_x",
+              "type": "int"
+            },
+            {
+              "name": "start_y",
+              "type": "int"
+            },
+            {
+              "name": "timeout_ms",
+              "type": "int"
+            },
+            {
+              "name": "max_depth",
+              "type": "int"
+            },
+            {
+              "name": "x",
+              "type": "int"
+            },
+            {
+              "name": "y",
+              "type": "int"
+            },
+            {
+              "name": "radius",
+              "type": "int"
+            },
+            {
+              "name": "observe",
+              "type": "bool"
+            },
+            {
+              "name": "windows",
+              "type": "bool"
+            },
+            {
+              "name": "intent",
+              "type": "str"
+            },
+            {
+              "name": "step",
+              "type": "str"
+            }
+          ],
+          "source": "src/screenbox/tools/find.py:226"
+        }
+      ],
+      "help": [
+        {
+          "name": "desktop_help",
+          "description": "Screenbox interaction strategy guide. Call when unsure about workflow.",
+          "category": "help",
+          "parameters": [],
+          "source": "src/screenbox/tools/help.py:8"
+        }
+      ],
+      "input": [
+        {
+          "name": "desktop_type",
+          "description": "Type text on the active window via keyboard.",
+          "category": "input",
+          "parameters": [
+            {
+              "name": "desktop_id",
+              "type": "str"
+            },
+            {
+              "name": "text",
+              "type": "str"
+            },
+            {
+              "name": "delay",
+              "type": "int"
+            },
+            {
+              "name": "intent",
+              "type": "str"
+            },
+            {
+              "name": "step",
+              "type": "str"
+            }
+          ],
+          "source": "src/screenbox/tools/input.py:9"
+        },
+        {
+          "name": "desktop_key",
+          "description": "Press keyboard shortcut or key combination.",
+          "category": "input",
+          "parameters": [
+            {
+              "name": "desktop_id",
+              "type": "str"
+            },
+            {
+              "name": "keys",
+              "type": "str"
+            },
+            {
+              "name": "text",
+              "type": "str"
+            },
+            {
+              "name": "intent",
+              "type": "str"
+            },
+            {
+              "name": "step",
+              "type": "str"
+            }
+          ],
+          "source": "src/screenbox/tools/input.py:29"
+        },
+        {
+          "name": "desktop_shell",
+          "description": "Run shell command inside the desktop container.",
+          "category": "input",
+          "parameters": [
+            {
+              "name": "desktop_id",
+              "type": "str"
+            },
+            {
+              "name": "command",
+              "type": "str"
+            },
+            {
+              "name": "timeout",
+              "type": "int"
+            },
+            {
+              "name": "intent",
+              "type": "str"
+            },
+            {
+              "name": "step",
+              "type": "str"
+            }
+          ],
+          "source": "src/screenbox/tools/input.py:83"
+        }
+      ],
+      "knowledge_tools": [
+        {
+          "name": "desktop_add_knowledge",
+          "description": "Save a knowledge fact about an application for future sessions.",
+          "category": "knowledge_tools",
+          "parameters": [
+            {
+              "name": "desktop_id",
+              "type": "str"
+            },
+            {
+              "name": "app",
+              "type": "str"
+            },
+            {
+              "name": "fact",
+              "type": "str"
+            },
+            {
+              "name": "triggers",
+              "type": "str"
+            },
+            {
+              "name": "kind",
+              "type": "str"
+            },
+            {
+              "name": "intent",
+              "type": "str"
+            },
+            {
+              "name": "step",
+              "type": "str"
+            }
+          ],
+          "source": "src/screenbox/tools/knowledge_tools.py:14"
+        },
+        {
+          "name": "desktop_knowledge_search",
+          "description": "Search or list knowledge base.",
+          "category": "knowledge_tools",
+          "parameters": [
+            {
+              "name": "desktop_id",
+              "type": "str"
+            },
+            {
+              "name": "query",
+              "type": "str"
+            },
+            {
+              "name": "app",
+              "type": "str"
+            },
+            {
+              "name": "kind",
+              "type": "str"
+            },
+            {
+              "name": "intent",
+              "type": "str"
+            },
+            {
+              "name": "step",
+              "type": "str"
+            }
+          ],
+          "source": "src/screenbox/tools/knowledge_tools.py:62"
+        }
+      ],
+      "look": [
+        {
+          "name": "desktop_look",
+          "description": "OCR around grid cell or cursor. Returns REAL screen coordinates for clicking.",
+          "category": "look",
+          "parameters": [
+            {
+              "name": "desktop_id",
+              "type": "str"
+            },
+            {
+              "name": "cell",
+              "type": "int"
+            },
+            {
+              "name": "position",
+              "type": "str"
+            },
+            {
+              "name": "cell_size",
+              "type": "int"
+            },
+            {
+              "name": "ocr_radius",
+              "type": "int"
+            },
+            {
+              "name": "source",
+              "type": "str"
+            },
+            {
+              "name": "grid",
+              "type": "str"
+            },
+            {
+              "name": "intent",
+              "type": "str"
+            },
+            {
+              "name": "step",
+              "type": "str"
+            }
+          ],
+          "source": "src/screenbox/tools/look.py:18"
+        }
+      ],
+      "manage": [
+        {
+          "name": "desktop_manage",
+          "description": "Desktop lifecycle, snapshots, and misc operations.",
+          "category": "manage",
+          "parameters": [
+            {
+              "name": "action",
+              "type": "str"
+            },
+            {
+              "name": "desktop_id",
+              "type": "Optional[str]"
+            },
+            {
+              "name": "label",
+              "type": "Optional[str]"
+            },
+            {
+              "name": "url",
+              "type": "Optional[str]"
+            },
+            {
+              "name": "resolution",
+              "type": "Optional[str]"
+            },
+            {
+              "name": "image",
+              "type": "Optional[str]"
+            },
+            {
+              "name": "confirm",
+              "type": "bool"
+            },
+            {
+              "name": "save_snapshot",
+              "type": "bool"
+            },
+            {
+              "name": "agent_id",
+              "type": "Optional[str]"
+            },
+            {
+              "name": "snapshot_name",
+              "type": "Optional[str]"
+            },
+            {
+              "name": "text",
+              "type": "Optional[str]"
+            },
+            {
+              "name": "cell_size",
+              "type": "int"
+            },
+            {
+              "name": "app",
+              "type": "Optional[str]"
+            },
+            {
+              "name": "app_args",
+              "type": "Optional[str]"
+            },
+            {
+              "name": "wait_ms",
+              "type": "int"
+            },
+            {
+              "name": "pid",
+              "type": "int"
+            },
+            {
+              "name": "proc_name",
+              "type": "Optional[str]"
+            },
+            {
+              "name": "signal",
+              "type": "int"
+            },
+            {
+              "name": "sort",
+              "type": "str"
+            },
+            {
+              "name": "direction",
+              "type": "str"
+            },
+            {
+              "name": "amount",
+              "type": "int"
+            },
+            {
+              "name": "x",
+              "type": "int"
+            },
+            {
+              "name": "y",
+              "type": "int"
+            },
+            {
+              "name": "x2",
+              "type": "int"
+            },
+            {
+              "name": "y2",
+              "type": "int"
+            },
+            {
+              "name": "button",
+              "type": "int"
+            },
+            {
+              "name": "timeout_ms",
+              "type": "int"
+            },
+            {
+              "name": "title",
+              "type": "Optional[str]"
+            },
+            {
+              "name": "threshold_ms",
+              "type": "int"
+            },
+            {
+              "name": "profile",
+              "type": "Optional[str]"
+            },
+            {
+              "name": "intent",
+              "type": "Optional[str]"
+            },
+            {
+              "name": "step",
+              "type": "Optional[str]"
+            }
+          ],
+          "source": "src/screenbox/tools/manage.py:202"
+        }
+      ],
+      "screenshot": [
+        {
+          "name": "desktop_screenshot",
+          "description": "Screenshot the desktop. Returns normalized 1000x1000 image with grid overlay.",
+          "category": "screenshot",
+          "parameters": [
+            {
+              "name": "desktop_id",
+              "type": "str"
+            },
+            {
+              "name": "region",
+              "type": "str"
+            },
+            {
+              "name": "cell",
+              "type": "str"
+            },
+            {
+              "name": "grid",
+              "type": "str"
+            },
+            {
+              "name": "enhance",
+              "type": "bool"
+            },
+            {
+              "name": "normalize_width",
+              "type": "int"
+            },
+            {
+              "name": "intent",
+              "type": "str"
+            },
+            {
+              "name": "step",
+              "type": "str"
+            }
+          ],
+          "source": "src/screenbox/tools/screenshot.py:159"
+        }
+      ],
+      "watch": [
+        {
+          "name": "desktop_wait_stable",
+          "description": "Wait until screen region stops changing (stabilizes).",
+          "category": "watch",
+          "parameters": [
+            {
+              "name": "desktop_id",
+              "type": "str"
+            },
+            {
+              "name": "region",
+              "type": "str"
+            },
+            {
+              "name": "timeout",
+              "type": "float"
+            },
+            {
+              "name": "intent",
+              "type": "str"
+            },
+            {
+              "name": "step",
+              "type": "str"
+            }
+          ],
+          "source": "src/screenbox/tools/watch.py:65"
+        },
+        {
+          "name": "desktop_wait_change",
+          "description": "Wait until something changes in screen region.",
+          "category": "watch",
+          "parameters": [
+            {
+              "name": "desktop_id",
+              "type": "str"
+            },
+            {
+              "name": "region",
+              "type": "str"
+            },
+            {
+              "name": "timeout",
+              "type": "float"
+            },
+            {
+              "name": "intent",
+              "type": "str"
+            },
+            {
+              "name": "step",
+              "type": "str"
+            }
+          ],
+          "source": "src/screenbox/tools/watch.py:108"
+        }
+      ],
+      "window": [
+        {
+          "name": "desktop_window",
+          "description": "Window management operations.",
+          "category": "window",
+          "parameters": [
+            {
+              "name": "desktop_id",
+              "type": "str"
+            },
+            {
+              "name": "action",
+              "type": "str"
+            },
+            {
+              "name": "window_id",
+              "type": "str"
+            },
+            {
+              "name": "width",
+              "type": "int"
+            },
+            {
+              "name": "height",
+              "type": "int"
+            },
+            {
+              "name": "x",
+              "type": "int"
+            },
+            {
+              "name": "y",
+              "type": "int"
+            },
+            {
+              "name": "intent",
+              "type": "str"
+            },
+            {
+              "name": "step",
+              "type": "str"
+            }
+          ],
+          "source": "src/screenbox/tools/window.py:9"
+        }
+      ]
+    }
+  },
+  "api": {
+    "endpoints": [
+      {
+        "path": "/api/desktop/list",
+        "method": "GET",
+        "handler": "api_desktop_list",
+        "description": "Per-desktop resource stats via cgroup files inside containers."
+      },
+      {
+        "path": "/api/desktop/create",
+        "method": "POST",
+        "handler": "api_desktop_create",
+        "description": "Admin = API token auth (existing SCREENBOX_API_TOKEN)."
+      },
+      {
+        "path": "/api/agent/register",
+        "method": "POST",
+        "handler": "api_agent_register",
+        "description": "Admin: register new agent. Returns api_key (shown once)."
+      },
+      {
+        "path": "/api/agent/login",
+        "method": "POST",
+        "handler": "api_agent_login",
+        "description": "Agent: authenticate with agent_id + api_key. Returns session token."
+      },
+      {
+        "path": "/api/agent/logout",
+        "method": "POST",
+        "handler": "api_agent_logout",
+        "description": "Agent: end session."
+      },
+      {
+        "path": "/api/agent/list",
+        "method": "GET",
+        "handler": "api_agent_list",
+        "description": "Admin: list all registered agents."
+      },
+      {
+        "path": "/api/agent/suspend",
+        "method": "POST",
+        "handler": "api_agent_suspend",
+        "description": "Admin: suspend agent."
+      },
+      {
+        "path": "/api/agent/activate",
+        "method": "POST",
+        "handler": "api_agent_activate",
+        "description": "Admin: re-activate suspended agent."
+      },
+      {
+        "path": "/api/agent/delete",
+        "method": "POST",
+        "handler": "api_agent_delete",
+        "description": "Admin: delete agent and all assignments."
+      },
+      {
+        "path": "/api/agent/reset-key",
+        "method": "POST",
+        "handler": "api_agent_reset_key",
+        "description": "Admin: generate new API key for agent."
+      },
+      {
+        "path": "/api/sessions",
+        "method": "GET",
+        "handler": "api_sessions",
+        "description": "Admin or dashboard: list active sessions."
+      },
+      {
+        "path": "/api/desktop/assign",
+        "method": "POST",
+        "handler": "api_desktop_assign",
+        "description": "Assign desktop to agent. Agent auth (session_token) or admin."
+      },
+      {
+        "path": "/api/desktop/unassign",
+        "method": "POST",
+        "handler": "api_desktop_unassign",
+        "description": "Admin-only: release desktop assignment."
+      },
+      {
+        "path": "/api/desktop/assignments",
+        "method": "GET",
+        "handler": "api_desktop_assignments",
+        "description": "List all desktop assignments. Admin or dashboard."
+      },
+      {
+        "path": "/api/desktop/my",
+        "method": "POST",
+        "handler": "api_desktop_my",
+        "description": "Agent: list my assigned desktops."
+      },
+      {
+        "path": "/api/desktop/share",
+        "method": "POST",
+        "handler": "api_desktop_share_create",
+        "description": "Create share link. Agent (session_token) or admin (Bearer)."
+      },
+      {
+        "path": "/api/desktop/share",
+        "method": "DELETE",
+        "handler": "api_desktop_share_revoke",
+        "description": "Revoke share link. Agent (own) or admin (any)."
+      },
+      {
+        "path": "/api/desktop/shares",
+        "method": "GET",
+        "handler": "api_desktop_shares_list",
+        "description": "Admin: list active share links."
+      },
+      {
+        "path": "/api/desktop/shares",
+        "method": "DELETE",
+        "handler": "api_desktop_shares_revoke_all",
+        "description": "Admin: revoke all shares (optionally for a desktop)."
+      },
+      {
+        "path": "/api/desktop/share/validate",
+        "method": "GET",
+        "handler": "api_desktop_share_validate",
+        "description": "Public: validate share token and get desktop info for viewer."
+      },
+      {
+        "path": "/api/knowledge",
+        "method": "GET",
+        "handler": "api_knowledge_list",
+        "description": "List all knowledge entries. ?desktop_id= for per-desktop scope."
+      },
+      {
+        "path": "/api/knowledge/desktops",
+        "method": "GET",
+        "handler": "api_knowledge_desktops",
+        "description": "List desktop IDs that have their own knowledge."
+      },
+      {
+        "path": "/api/knowledge/importable",
+        "method": "GET",
+        "handler": "api_knowledge_importable",
+        "description": "List all knowledge files with their load status (for import UI)."
+      },
+      {
+        "path": "/api/knowledge/import-server",
+        "method": "POST",
+        "handler": "api_knowledge_import_server",
+        "description": "Import a knowledge file by slug. Body: {slug, kind, mode}."
+      },
+      {
+        "path": "/api/knowledge/upload",
+        "method": "POST",
+        "handler": "api_knowledge_upload",
+        "description": "Upload/import a JSON knowledge file. Body: {slug, app, kind, mode, facts}."
+      },
+      {
+        "path": "/api/knowledge/{slug}",
+        "method": "GET",
+        "handler": "api_knowledge_get",
+        "description": "Get full knowledge for an app/flow/site slug."
+      },
+      {
+        "path": "/api/knowledge/{slug}/facts",
+        "method": "POST",
+        "handler": "api_knowledge_add_fact",
+        "description": "Add a fact to a knowledge entry."
+      },
+      {
+        "path": "/api/knowledge/{slug}",
+        "method": "DELETE",
+        "handler": "api_knowledge_delete_app",
+        "description": "Delete entire knowledge entry."
+      },
+      {
+        "path": "/api/knowledge/{slug}/facts/{index}",
+        "method": "DELETE",
+        "handler": "api_knowledge_delete_fact",
+        "description": "Delete a single fact by index."
+      },
+      {
+        "path": "/api/logs/{desktop_id}/recent",
+        "method": "GET",
+        "handler": "api_logs_recent",
+        "description": "Get recent log entries for a desktop."
+      },
+      {
+        "path": "/api/logs/{desktop_id}/download",
+        "method": "GET",
+        "handler": "api_logs_download",
+        "description": "Download logs as JSONL attachment."
+      }
+    ]
+  },
+  "config": [
+    {
+      "env_var": "SCREENBOX_BASE_DIR",
+      "default": "",
+      "description": "",
+      "source": "config.py"
+    },
+    {
+      "env_var": "SCREENBOX_DOCKER_NETWORK",
+      "default": "",
+      "description": "",
+      "source": "config.py"
+    },
+    {
+      "env_var": "SCREENBOX_TRANSPORT",
+      "default": "both",
+      "description": "",
+      "source": "docker-compose.yml"
+    },
+    {
+      "env_var": "SCREENBOX_HOST",
+      "default": "0.0.0.0",
+      "description": "",
+      "source": "docker-compose.yml"
+    },
+    {
+      "env_var": "SCREENBOX_PORT",
+      "default": "8080",
+      "description": "",
+      "source": "docker-compose.yml"
+    },
+    {
+      "env_var": "SCREENBOX_DATA_VOLUME",
+      "default": "${COMPOSE_PROJECT_NAME:-screenbox}_screenbox-data",
+      "description": "",
+      "source": "docker-compose.yml"
+    },
+    {
+      "env_var": "SCREENBOX_API_TOKEN",
+      "default": "${SCREENBOX_API_TOKEN:?Run ./setup.sh first}",
+      "description": "",
+      "source": "docker-compose.yml"
+    },
+    {
+      "env_var": "SCREENBOX_ADMIN_KEY",
+      "default": "${SCREENBOX_ADMIN_KEY:-}",
+      "description": "",
+      "source": "docker-compose.yml"
+    },
+    {
+      "env_var": "SCREENBOX_DASHBOARD_HOST",
+      "default": "0.0.0.0",
+      "description": "",
+      "source": "docker-compose.yml"
+    },
+    {
+      "env_var": "SCREENBOX_DASHBOARD_PORT",
+      "default": "16000",
+      "description": "",
+      "source": "docker-compose.yml"
+    },
+    {
+      "env_var": "SCREENBOX_DESKTOPS_DIR",
+      "default": "/data/screenbox/desktops",
+      "description": "",
+      "source": "docker-compose.yml"
+    },
+    {
+      "env_var": "SCREENBOX_DESKTOP_IMAGE",
+      "default": "${SCREENBOX_DESKTOP_IMAGE:-screenbox:latest}",
+      "description": "",
+      "source": "docker-compose.yml"
+    },
+    {
+      "env_var": "SCREENBOX_MCP_API_URL",
+      "default": "http://screenbox-mcp:8080",
+      "description": "",
+      "source": "docker-compose.yml"
+    }
+  ],
+  "profile_schema": {},
+  "desktop_features": [
+    {
+      "step": 1,
+      "name": "D-Bus session bus (required by MATE and AT-SPI)"
+    },
+    {
+      "step": 2,
+      "name": "Xvnc (TigerVNC: X server + built-in VNC on port 5900)"
+    },
+    {
+      "step": 3,
+      "name": "xrdp (RDP server on port 3389, connects to Xvnc on 5900)"
+    },
+    {
+      "step": 4,
+      "name": "AT-SPI accessibility bus (for OS-level automation)"
+    },
+    {
+      "step": 5,
+      "name": "Generate screenbox wallpaper (shared path for both XFCE and MATE)"
+    },
+    {
+      "step": 6,
+      "name": "XFCE desktop session"
+    },
+    {
+      "step": 7,
+      "name": "WS bridge (Chrome extension <-> external controller)"
+    },
+    {
+      "step": 8,
+      "name": "Chrome + Extension (always started -- extension required for semantic tools)"
+    },
+    {
+      "step": 9,
+      "name": "Desktop Profile (optional)"
+    }
+  ]
+}

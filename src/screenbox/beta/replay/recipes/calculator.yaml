@@ -1,0 +1,32 @@
+name: calculator
+description: Open MATE Calculator, compute an expression, read the result via OCR.
+params:
+  expression: "256*37"
+
+steps:
+  - tool: desktop_shell
+    args:
+      command: "mate-calc &"
+    on_error: skip
+
+  - tool: sleep
+    args:
+      ms: 2000
+
+  - tool: desktop_type
+    args:
+      text: "{{expression}}"
+
+  - tool: desktop_key
+    args:
+      keys: "Return"
+
+  - tool: sleep
+    args:
+      ms: 500
+
+  - tool: desktop_look
+    args:
+      cell: "13"
+    extract: result
+    extract_key: text

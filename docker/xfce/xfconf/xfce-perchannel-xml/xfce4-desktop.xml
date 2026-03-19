@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<channel name="xfce4-desktop" version="1.0">
+  <property name="backdrop" type="empty">
+    <property name="screen0" type="empty">
+      <property name="monitorscreen" type="empty">
+        <property name="workspace0" type="empty">
+          <property name="color-style" type="int" value="0"/>
+          <property name="rgba1" type="array">
+            <value type="double" value="0.039216"/>
+            <value type="double" value="0.054902"/>
+            <value type="double" value="0.078431"/>
+            <value type="double" value="1.000000"/>
+          </property>
+          <property name="image-style" type="int" value="5"/>
+          <property name="last-image" type="string" value="/home/screenbox/.config/xfce4/screenbox-wallpaper.png"/>
+        </property>
+      </property>
+      <property name="monitorVNC-0" type="empty">
+        <property name="workspace0" type="empty">
+          <property name="color-style" type="int" value="0"/>
+          <property name="rgba1" type="array">
+            <value type="double" value="0.039216"/>
+            <value type="double" value="0.054902"/>
+            <value type="double" value="0.078431"/>
+            <value type="double" value="1.000000"/>
+          </property>
+          <property name="image-style" type="int" value="5"/>
+          <property name="last-image" type="string" value="/home/screenbox/.config/xfce4/screenbox-wallpaper.png"/>
+        </property>
+      </property>
+    </property>
+  </property>
+  <property name="desktop-icons" type="empty">
+    <property name="style" type="int" value="2"/>
+    <property name="file-icons" type="empty">
+      <property name="show-home" type="bool" value="false"/>
+      <property name="show-filesystem" type="bool" value="false"/>
+      <property name="show-trash" type="bool" value="false"/>
+      <property name="show-removable" type="bool" value="false"/>
+    </property>
+  </property>
+</channel>

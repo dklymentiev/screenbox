@@ -1,0 +1,24 @@
+{
+  "manifest_version": 3,
+  "name": "Screenbox",
+  "version": "2.0.1",
+  "description": "Browser control for Screenbox virtual desktops",
+  "content_security_policy": {
+    "extension_pages": "script-src 'self'; object-src 'none'"
+  },
+  "permissions": [
+    "activeTab",
+    "tabs",
+    "scripting"
+  ],
+  "host_permissions": [
+    "<all_urls>"
+  ],
+  "background": {
+    "service_worker": "background.js"
+  },
+  "action": {
+    "default_title": "Screenbox"
+  },
+  "web_accessible_resources": []
+}

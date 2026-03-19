@@ -1,0 +1,4 @@
+# Force LF for scripts (prevents CRLF on Windows breaking Docker builds)
+*.sh text eol=lf
+entrypoint.sh text eol=lf
+Dockerfile text eol=lf

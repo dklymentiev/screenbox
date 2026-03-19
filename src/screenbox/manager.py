@@ -4,6 +4,7 @@ Creates, destroys, pauses, resumes, snapshots, and restores
 Docker containers that serve as virtual desktops.
 """
 
+import gzip as gzip_module
 import json
 import logging
 import os
@@ -88,6 +89,7 @@ class DesktopManager:
     def __init__(self, config: Config, on_state_change=None):
         self.config = config
         self._desktops: dict[str, DesktopInfo] = {}
+        self._snapshot_active: set[str] = set()  # prevent concurrent snapshots
         self._grid_state: dict[str, tuple[int, int]] = {}  # desktop_id -> (cols, rows)
         self._port_lock = threading.Lock()
         self._on_state_change = on_state_change
@@ -669,7 +671,7 @@ class DesktopManager:
         try:
             result = subprocess.run(
                 ["docker", "exec", "-u", "root", container_name,
-                 "tar", "czf", "-", "--warning=no-file-changed",
+                 "tar", "cf", "-", "--warning=no-file-changed",
                  "-C", "/", "home/screenbox"],
                 capture_output=True, timeout=120,
             )
@@ -682,18 +684,21 @@ class DesktopManager:
                 log.error("Snapshot empty for %s", desktop_id)
                 return None
 
+            # Compress on MCP side (avoids orphan gzip processes inside container)
+            snapshot_data = gzip_module.compress(result.stdout)
+
             # Encrypt with age if enabled
             if self.config.encrypt_snapshots:
-                encrypted = self._age_encrypt(result.stdout)
+                encrypted = self._age_encrypt(snapshot_data)
                 if encrypted is None:
                     log.warning("Encryption failed for %s, saving unencrypted", desktop_id)
-                    snap_path.write_bytes(result.stdout)
+                    snap_path.write_bytes(snapshot_data)
                 else:
                     filename = filename.replace(".tar.gz", ".tar.gz.age")
                     snap_path = snap_dir / filename
                     snap_path.write_bytes(encrypted)
             else:
-                snap_path.write_bytes(result.stdout)
+                snap_path.write_bytes(snapshot_data)
 
             try:
                 snap_path.chmod(0o600)
@@ -1293,13 +1298,19 @@ class DesktopManager:
                     continue
                 last_snap = getattr(info, '_last_auto_snapshot', 0)
                 if now - last_snap >= auto_snap_threshold:
+                    if desktop_id in self._snapshot_active:
+                        log.debug("Skipping auto-snapshot for %s -- previous still running", desktop_id)
+                        continue
                     try:
+                        self._snapshot_active.add(desktop_id)
                         snap_name = self.snapshot(desktop_id, "auto")
                         if snap_name:
                             info._last_auto_snapshot = now
                             log.info("Auto-snapshot for %s: %s", desktop_id, snap_name)
                     except Exception as e:
                         log.warning("Auto-snapshot failed for %s: %s", desktop_id, e)
+                    finally:
+                        self._snapshot_active.discard(desktop_id)
 
         # 3. Auto-pause idle desktops
         idle_minutes = self.config.get("idle_pause_minutes", 0)

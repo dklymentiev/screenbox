@@ -32,6 +32,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     net-tools \
     openssl \
     gosu \
+    tini \
     dbus-x11 \
     tigervnc-standalone-server \
     xrdp \
@@ -147,4 +148,4 @@ EXPOSE 3389 8765
 HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 \
     CMD pgrep -x xrdp > /dev/null && pgrep -x Xvnc > /dev/null || exit 1
 
-ENTRYPOINT ["/opt/screenbox/bin/entrypoint.sh"]
+ENTRYPOINT ["/usr/bin/tini", "--", "/opt/screenbox/bin/entrypoint.sh"]

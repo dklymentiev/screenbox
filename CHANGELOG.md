@@ -1,5 +1,22 @@
 # Changelog
 
+## 0.15.0 (2026-03-22) -- Knowledge Compilation Pipeline
+
+### Knowledge Compilation
+- **Compile session logs into knowledge** -- LLM analyzes action logs and extracts declarative knowledge facts (what the agent learned about apps, OS, and workflows)
+- **MCP tools** -- `desktop_compile_knowledge(desktop_id, session_id, task)` and `desktop_merge_knowledge(desktop_id, facts, target, mode)` for agents to compile and merge knowledge programmatically
+- **HTTP API** -- `POST /api/knowledge/compile` and `POST /api/knowledge/merge` for dashboard integration
+- **Preview + Apply workflow** -- preview merge diff (new/updated/unchanged facts) before applying changes
+- **Configurable LLM** -- any OpenAI-compatible endpoint via `SCREENBOX_LLM_ENDPOINT`, `SCREENBOX_LLM_MODEL`, `SCREENBOX_LLM_KEY` env vars (OpenRouter, Ollama, Claude API, etc.)
+
+### Knowledge Quality
+- **Declarative facts only** -- compilation prompt enforces declarative style ("dialog dismissed with Enter") instead of imperative ("press Enter to close dialog"), preventing agents from executing hints as commands
+- **Three knowledge levels** -- os (desktop environment), app (application-specific), flow (multi-step processes)
+- **Trigger-based deduplication** -- preview_merge compares candidates vs existing facts by trigger overlap to prevent duplicates
+
+### Agent Workflow
+- **Intent parameter mandatory** -- MCP instructions now require `intent` on every tool call, explaining WHY the action is performed. Logged for knowledge compilation quality.
+
 ## 0.14.0 (2026-03-18) -- Shared volume data architecture, desktop profiles
 
 ### Data Architecture

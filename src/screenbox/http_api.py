@@ -1065,6 +1065,77 @@ def register(mcp):
         store._save(slug, data, desktop_id)
         return JSONResponse({"ok": True, "removed": removed.get("text", "")[:100], "total": len(facts)})
 
+    # -- Knowledge Compilation API --
+
+    @mcp.custom_route("/api/knowledge/compile", methods=["POST"])
+    async def api_knowledge_compile(request: Request) -> Response:
+        """Compile session logs into candidate knowledge facts via LLM."""
+        if not _check_auth(request):
+            return _auth_error()
+        body = await request.json()
+        desktop_id = body.get("desktop_id", "")
+        if not desktop_id:
+            return JSONResponse({"error": "desktop_id required"}, status_code=400)
+
+        from .llm_client import is_configured
+        if not is_configured():
+            return JSONResponse({"error": "LLM not configured. Set SCREENBOX_LLM_KEY."}, status_code=500)
+
+        session_id = body.get("session_id", "latest")
+        task = body.get("task", "")
+
+        import asyncio
+        try:
+            result = await asyncio.to_thread(_compile_knowledge_sync, desktop_id, session_id, task)
+        except Exception as e:
+            return JSONResponse({"error": str(e)}, status_code=500)
+        return JSONResponse(result)
+
+    def _compile_knowledge_sync(desktop_id: str, session_id: str, task: str) -> dict:
+        from .knowledge_compiler import compile_from_log, _read_session_log
+        entries, actual_sid = _read_session_log(desktop_id, session_id)
+        if not entries:
+            return {"error": f"No log entries for {desktop_id}/{session_id}", "candidates": []}
+        store = get_store()
+        all_entries = store.list_all(desktop_id)
+        existing = []
+        for e in all_entries:
+            data = store._load(e["slug"], e.get("kind", "app"), desktop_id)
+            existing.extend(data.get("facts", []))
+        candidates = compile_from_log(entries, task, existing)
+        domains = {}
+        for c in candidates:
+            d = c.get("domain", "unknown")
+            domains[d] = domains.get(d, 0) + 1
+        suggested = max(domains, key=domains.get) if domains else "unknown"
+        return {
+            "candidates": candidates,
+            "suggested_target": {"slug": suggested, "kind": "app"},
+            "session_id": actual_sid,
+            "log_entries_analyzed": len(entries),
+        }
+
+    @mcp.custom_route("/api/knowledge/merge", methods=["POST"])
+    async def api_knowledge_merge(request: Request) -> Response:
+        """Preview or apply merge of compiled facts into existing knowledge."""
+        if not _check_auth(request):
+            return _auth_error()
+        body = await request.json()
+        facts = body.get("facts", [])
+        target = body.get("target", "")
+        if not facts or not target:
+            return JSONResponse({"error": "facts and target required"}, status_code=400)
+        kind = body.get("kind", "app")
+        mode = body.get("mode", "preview")
+        desktop_id = body.get("desktop_id")
+
+        from .knowledge_compiler import preview_merge, apply_merge
+        diff = preview_merge(facts, target, kind, desktop_id)
+        if mode == "apply":
+            result = apply_merge(diff, target, kind, desktop_id)
+            return JSONResponse({"mode": "apply", "applied": True, **result})
+        return JSONResponse({"mode": "preview", "diff": diff})
+
     # -- Logs API (single source of truth for dashboard) --
 
     @mcp.custom_route("/api/logs/{desktop_id}/recent", methods=["GET"])

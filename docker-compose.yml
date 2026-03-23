@@ -49,6 +49,9 @@ services:
       - SCREENBOX_API_TOKEN=${SCREENBOX_API_TOKEN:?Run ./setup.sh first}
       - DOCKER_HOST=tcp://screenbox-socket-proxy:2375
       - SCREENBOX_ADMIN_KEY=${SCREENBOX_ADMIN_KEY:-}
+      - SCREENBOX_LLM_ENDPOINT=${SCREENBOX_LLM_ENDPOINT:-}
+      - SCREENBOX_LLM_MODEL=${SCREENBOX_LLM_MODEL:-}
+      - SCREENBOX_LLM_KEY=${SCREENBOX_LLM_KEY:-}
     networks:
       - screenbox
     restart: unless-stopped

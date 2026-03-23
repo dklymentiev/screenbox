@@ -316,6 +316,18 @@ The desktop does NOT guarantee focus order after app launch.
 over GUI paste. It is faster, more reliable, and avoids focus issues. \
 Open the file in an editor AFTER writing it, for the user to see.
 
+## Intent (MANDATORY)
+
+Every tool call MUST include the `intent` parameter explaining WHY you are performing this action.
+Good intent describes the goal, not the action itself.
+- GOOD: intent="Find the Save button in the dialog"
+- GOOD: intent="Navigate to pricing page to compare plans"
+- BAD: intent="Click button" (too vague)
+- BAD: intent="" (empty)
+
+Intent is logged and used for knowledge compilation -- it helps future agents understand
+the reasoning behind each action.
+
 ## Anti-Patterns
 
 - NEVER guess coordinates from full screenshots -- use look to get OCR coords

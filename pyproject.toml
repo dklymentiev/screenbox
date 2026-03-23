@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "screenbox-mcp"
-version = "0.14.0"
+version = "0.15.0"
 description = "Virtual desktops for AI agents via MCP"
 readme = "README.md"
 license = "AGPL-3.0-only"

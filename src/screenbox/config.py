@@ -37,6 +37,7 @@ DEFAULT_CONFIG = {
     "lease_ttl": 600,  # seconds; 0 = no auto-expiry
     "auto_snapshot_minutes": 30,  # 0 = disabled; periodic auto-snapshot interval
     "encrypt_snapshots": True,  # encrypt snapshots with age
+    "require_intent": False,  # warn when tool calls have no intent parameter
 }
 
 

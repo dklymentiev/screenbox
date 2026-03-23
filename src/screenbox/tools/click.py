@@ -139,7 +139,7 @@ def register(mcp, get_desktop, get_manager, log_action, app_catalog):
                 result["observe_error"] = str(e)
                 return [json.dumps(result)]
 
-        log_action(desktop_id, "desktop_click",
+        warning = log_action(desktop_id, "desktop_click",
                    {"x": x, "y": y, "button": button, "clicks": clicks},
                    result, t0, intent=intent, step=step)
-        return [json.dumps(result)]
+        return [json.dumps(result) + warning]

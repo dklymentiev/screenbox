@@ -95,10 +95,32 @@ def get_logger(desktop_id: str) -> ActionLogger:
     return _loggers[desktop_id]
 
 
+def check_intent(tool: str, intent: str) -> str:
+    """Check if intent is provided when require_intent is enabled.
+
+    Returns warning string to append to tool response, or empty string.
+    """
+    if intent:
+        return ""
+    if not config.get("require_intent", False):
+        return ""
+    # Skip for tools that don't need intent (info, help, system)
+    skip_tools = {"screenbox_info", "screenbox_logs", "desktop_help",
+                  "desktop_knowledge_search", "desktop_screenshot"}
+    if tool in skip_tools:
+        return ""
+    return ("\n\n[WARNING] intent parameter is empty. "
+            "Explain WHY you are performing this action -- "
+            "it improves knowledge compilation quality.")
+
+
 def log_action(desktop_id: str, tool: str, args: dict,
                result: object = None, start_time: float = 0,
-               intent: str = "", step: str = "") -> None:
-    """Log a tool invocation to the desktop's action log."""
+               intent: str = "", step: str = "") -> str:
+    """Log a tool invocation to the desktop's action log.
+
+    Returns intent warning string (empty if intent provided or not required).
+    """
     duration = int((time.time() - start_time) * 1000) if start_time else None
     from .request_context import get_current_ip
     effective_agent = get_current_agent() or AGENT_ID
@@ -110,6 +132,7 @@ def log_action(desktop_id: str, tool: str, args: dict,
     )
     # Update last_tool_call to prevent idle auto-pause (#492)
     manager.touch(desktop_id)
+    return check_intent(tool, intent)
 
 
 def format_recent_actions(desktop_id: str, limit: int = 8) -> str:

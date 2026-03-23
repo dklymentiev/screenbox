@@ -161,5 +161,5 @@ def register(mcp, get_desktop, get_manager, log_action, app_catalog):
                                    "ssl_errors", "network", "click", "type",
                                    "emulate", "geolocation"]})
 
-        log_action(desktop_id, "desktop_chrome", {"action": action}, result, t0, intent=intent, step=step)
-        return json.dumps(result, indent=2)
+        warning = log_action(desktop_id, "desktop_chrome", {"action": action}, result, t0, intent=intent, step=step)
+        return json.dumps(result, indent=2) + warning

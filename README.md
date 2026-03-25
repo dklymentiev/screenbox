@@ -6,6 +6,10 @@ Screenbox gives any MCP-compatible AI agent (Claude, Cursor, Copilot, etc.) its 
 
 Each desktop is a fully isolated Docker container. No bind mounts -- files move only through explicit API calls. Save and restore state with snapshots. Everything runs on your machine.
 
+## Demo
+
+![Screenbox Demo](https://github.com/user-attachments/assets/0af9f973-fd53-45b5-a951-e81f071a059a)
+
 ## Quick Start
 
 ### Option A: Docker Compose (recommended)

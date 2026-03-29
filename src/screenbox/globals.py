@@ -366,7 +366,7 @@ the reasoning behind each action.
 # When deployed on a network (0.0.0.0), disable DNS rebinding checks
 # so external clients can connect using the server's real hostname/IP.
 _mcp_host = os.environ.get("SCREENBOX_HOST", "127.0.0.1")
-_mcp_kwargs: dict = {"instructions": MCP_INSTRUCTIONS, "stateless_http": True}
+_mcp_kwargs: dict = {"instructions": MCP_INSTRUCTIONS}
 if _mcp_host != "127.0.0.1":
     _mcp_kwargs["host"] = _mcp_host
 

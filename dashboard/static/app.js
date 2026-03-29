@@ -110,10 +110,7 @@ function renderGrid(desktops) {
                 <option value="1920x1080" selected>1920x1080</option>
               </select>
             </div>
-            <select name="image">
-              <option value="screenbox:xfce">XFCE + Chrome (922 MB)</option>
-              <option value="screenbox:latest">MATE + Chrome (1.7 GB)</option>
-            </select>
+            <input type="hidden" name="image" value="screenbox:latest">
             <div class="form-spacer"></div>
             <div class="form-actions">
               <button type="button" class="btn-cancel" onclick="closeCreateForm()">Cancel</button>
@@ -136,8 +133,9 @@ function renderGrid(desktops) {
     </div>`;
   }
 
-  // Pending cards (loading)
-  html += pendingDesktops.map(id => `
+  // Pending cards (loading) -- skip if already in real desktop list
+  const realIds = new Set(desktops.map(d => d.id));
+  html += pendingDesktops.filter(id => !realIds.has(id)).map(id => `
     <div class="tile" data-tile="${id}">
       <div class="tile-header">
         <span><span class="dot"></span><span class="tile-id">${id}</span></span>
@@ -187,8 +185,7 @@ function renderGrid(desktops) {
           ${isTransition
             ? '<div class="tile-preview-inner"><div class="spinner"></div></div>'
             : clickable
-              ? '<div class="tile-preview-inner tile-preview-screen">'
-                + '<img data-desktop="' + d.id + '" style="display:none">'
+              ? '<div class="tile-preview-inner tile-preview-screen" data-thumb-desktop="' + d.id + '">'
                 + '<div class="tile-connecting"><div class="spinner-small"></div><span>connecting</span></div>'
                 + '</div>'
               : d.state === 'saved'
@@ -715,26 +712,87 @@ document.getElementById('preview-close').onclick = () => {
   _saveState({selectedId: null, panelVisible: false});
 };
 
-function refreshScreenshots() {
-  document.querySelectorAll('.tile-preview img[data-desktop]').forEach(img => {
-    const id = img.dataset.desktop;
-    const url = _apiUrl('/api/screenshot?id=' + id + '&t=' + Date.now());
-    fetch(url).then(r => {
-      if (!r.ok) throw new Error('unavailable');
-      return r.blob();
-    }).then(blob => {
-      if (img.src && img.src.startsWith('blob:')) URL.revokeObjectURL(img.src);
-      img.src = URL.createObjectURL(blob);
-      img.style.display = '';
-      const conn = img.nextElementSibling;
-      if (conn && conn.classList.contains('tile-connecting')) conn.style.display = 'none';
-    }).catch(() => {
-      img.style.display = 'none';
-      const conn = img.nextElementSibling;
-      if (conn && conn.classList.contains('tile-connecting')) conn.style.display = '';
+// --- VNC Thumbnails: live stream instead of polling ---
+const _thumbConnections = new Map(); // desktopId -> { rfb, el }
+
+async function _connectThumb(desktopId, containerEl) {
+  // Already connected?
+  if (_thumbConnections.has(desktopId)) return;
+
+  const wsProto = location.protocol === 'https:' ? 'wss:' : 'ws:';
+  const wsPort = location.port ? ':' + location.port : '';
+  const wsUrl = wsProto + '//' + location.hostname + wsPort + '/vnc/' + desktopId;
+
+  try {
+    const RFB = await _getRFB();
+    containerEl.innerHTML = '';
+    const rfb = new RFB(containerEl, wsUrl);
+    rfb.viewOnly = true;
+    rfb.scaleViewport = true;
+    rfb.showDotCursor = false;
+    rfb.clipViewport = false;
+    rfb.resizeSession = false;
+    rfb.background = '#0a0e14';
+    rfb.qualityLevel = 3;  // low quality for thumbnails
+    rfb.compressionLevel = 9;  // max compression
+
+    rfb.addEventListener('connect', () => {
+      // Hide "connecting" spinner inside the container
+      const conn = containerEl.querySelector('.tile-connecting');
+      if (conn) conn.style.display = 'none';
     });
-  });
+    rfb.addEventListener('disconnect', () => {
+      _thumbConnections.delete(desktopId);
+      // Show "connecting" spinner again
+      const conn = containerEl.querySelector('.tile-connecting');
+      if (conn) conn.style.display = '';
+      // Auto-reconnect after 3s if tile still exists and tab visible
+      setTimeout(() => {
+        if (!document.hidden && document.querySelector('[data-thumb-desktop="' + desktopId + '"]')) {
+          _connectThumb(desktopId, containerEl);
+        }
+      }, 3000);
+    });
+
+    _thumbConnections.set(desktopId, { rfb, el: containerEl });
+  } catch (e) {
+    console.log('[thumb] VNC connect failed for ' + desktopId, e);
+  }
 }
+
+function _disconnectThumb(desktopId) {
+  const entry = _thumbConnections.get(desktopId);
+  if (entry) {
+    try { entry.rfb.disconnect(); } catch(e) {}
+    _thumbConnections.delete(desktopId);
+  }
+}
+
+function refreshScreenshots() {
+  // Connect VNC thumbnails for visible running desktops
+  document.querySelectorAll('.tile-preview-screen[data-thumb-desktop]').forEach(el => {
+    const id = el.dataset.thumbDesktop;
+    if (!_thumbConnections.has(id) && !document.hidden) {
+      _connectThumb(id, el);
+    }
+  });
+
+  // Disconnect thumbnails for desktops no longer visible
+  for (const [id, entry] of _thumbConnections) {
+    if (!document.querySelector('.tile-preview-screen[data-thumb-desktop="' + id + '"]')) {
+      _disconnectThumb(id);
+    }
+  }
+}
+
+// Disconnect all thumbnails when tab hidden, reconnect when visible
+document.addEventListener('visibilitychange', () => {
+  if (document.hidden) {
+    for (const [id] of _thumbConnections) _disconnectThumb(id);
+  } else {
+    refreshScreenshots();
+  }
+});
 
 async function refresh() {
   try {
@@ -749,6 +807,8 @@ async function refresh() {
     const realIds = new Set(currentDesktops.map(d => d.id));
     renderGrid(currentDesktops);
     updateStats(currentDesktops);
+    // Connect VNC thumbnails for new/changed desktops
+    setTimeout(refreshScreenshots, 500);
   } catch (e) {
     console.error('Refresh failed:', e);
   }
@@ -994,6 +1054,34 @@ function disconnectVNC() {
   _vncReconnectAttempts = 0;
 }
 
+// --- Overlay toggles (trail / dots) ---
+let _overlayState = { trail: false, dots: true, enabled: true, cursor: true };
+
+async function toggleOverlay(which) {
+  if (!rfbDesktopId) return;
+  const cb = document.getElementById('btn-toggle-' + which);
+  _overlayState[which] = cb.checked;
+  try {
+    await _apiFetch('/api/overlay', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({
+        id: rfbDesktopId,
+        text: `enabled=${_overlayState.enabled ? 1 : 0},cursor=${_overlayState.cursor ? 1 : 0},dots=${_overlayState.dots ? 1 : 0},trail=${_overlayState.trail ? 1 : 0}`
+      })
+    });
+  } catch (e) {
+    console.log('[overlay] toggle failed:', e);
+  }
+}
+
+// Init overlay toggle states
+function _initOverlayButtons() {
+  document.getElementById('btn-toggle-dots').checked = _overlayState.dots;
+  document.getElementById('btn-toggle-trail').checked = _overlayState.trail;
+}
+setTimeout(_initOverlayButtons, 100);
+
 // --- Click effect overlay ---
 const clickOverlay = document.getElementById('click-overlay');
 const clickCtx = clickOverlay.getContext('2d');
@@ -1170,7 +1258,10 @@ function _connectWs() {
 // Start
 _connectWs();
 _startPolling();
-setInterval(refreshScreenshots, 2000);
+// VNC thumbnails: connect once after render, reconnect on desktop list change
+// No polling needed — VNC pushes frame updates automatically
+setTimeout(refreshScreenshots, 2000); // initial connect after tiles render
+setInterval(refreshScreenshots, 10000); // periodic reconnect check
 setInterval(fetchSystem, 10000);
 
 

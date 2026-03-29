@@ -4,14 +4,19 @@ LABEL org.screenbox.component="mcp"
 # Install Docker CLI from official repo (docker.io in Debian Trixie lacks the CLI binary)
 RUN apt-get update && apt-get install -y --no-install-recommends \
     ca-certificates curl gnupg \
-    && install -m 0755 -d /etc/apt/keyrings \
+    && rm -rf /var/lib/apt/lists/*
+
+RUN install -m 0755 -d /etc/apt/keyrings \
     && curl -fsSL https://download.docker.com/linux/debian/gpg | gpg --dearmor -o /etc/apt/keyrings/docker.gpg \
     && chmod a+r /etc/apt/keyrings/docker.gpg \
     && echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/debian bookworm stable" \
-       > /etc/apt/sources.list.d/docker.list \
-    && apt-get update && apt-get install -y --no-install-recommends docker-ce-cli \
+       > /etc/apt/sources.list.d/docker.list
+
+RUN apt-get update && apt-get install -y --no-install-recommends docker-ce-cli \
     && apt-get purge -y gnupg && apt-get autoremove -y \
-    && apt-get update && apt-get install -y --no-install-recommends tesseract-ocr \
+    && rm -rf /var/lib/apt/lists/*
+
+RUN apt-get update && apt-get install -y --no-install-recommends tesseract-ocr \
     && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app

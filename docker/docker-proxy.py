@@ -29,6 +29,7 @@ ALLOWED = [
     ("POST",   r"/v[\d.]+/exec/[^/]+/resize"),
     ("GET",    r"/v[\d.]+/exec/[^/]+/json"),
     ("GET",    r"/v[\d.]+/images/json"),
+    ("GET",    r"/v[\d.]+/images/[^/]+/json"),
     ("GET",    r"/v[\d.]+/networks$"),
     ("GET",    r"/v[\d.]+/networks/[^/]+$"),
     ("POST",   r"/v[\d.]+/networks/[^/]+/connect"),

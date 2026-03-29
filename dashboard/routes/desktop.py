@@ -179,6 +179,21 @@ async def handle_api_settings(request: web.Request) -> web.Response:
     return web.json_response({"ok": True, "settings": _settings})
 
 
+async def handle_api_overlay(request: web.Request) -> web.Response:
+    """Toggle click indicator overlay via MCP API."""
+    body = await request.json()
+    desktop_id = body.get("id", "").strip()
+    text = body.get("text", "").strip()
+    if not desktop_id or not text:
+        return web.json_response({"error": "Missing id or text"}, status=400)
+    if not _VALID_ID.match(desktop_id):
+        return web.json_response({"error": "Invalid desktop_id"}, status=400)
+    result, status = await mcp_client.mcp_post(
+        "/api/desktop/overlay", {"id": desktop_id, "text": text}
+    )
+    return web.json_response(result, status=status)
+
+
 def setup(app: web.Application):
     """Register all desktop API routes."""
     app.router.add_get("/api/desktops", handle_api_desktops)
@@ -190,6 +205,7 @@ def setup(app: web.Application):
     app.router.add_post("/api/control", handle_api_control)
     app.router.add_post("/api/storage/delete", handle_api_storage_delete)
     app.router.add_post("/api/input", handle_api_input)
+    app.router.add_post("/api/overlay", handle_api_overlay)
     app.router.add_post("/api/settings", handle_api_settings)
     # Share links
     app.router.add_post("/api/share", handle_api_share)

@@ -7,6 +7,23 @@ set -e
 
 cd "$(dirname "$0")"
 
+# Pre-flight: Docker must be running
+if ! docker info >/dev/null 2>&1; then
+  echo ""
+  echo "[ERROR] Docker daemon is not running."
+  echo ""
+  if [[ "$OSTYPE" == "darwin"* ]]; then
+    echo "  On macOS: open Docker.app, wait for it to be ready, then rerun ./setup.sh"
+  elif [[ "$OSTYPE" == "msys" || "$OSTYPE" == "cygwin" ]]; then
+    echo "  On Windows: start Docker Desktop, wait for it to be ready, then rerun ./setup.sh"
+  else
+    echo "  Start Docker: sudo systemctl start docker"
+    echo "  Then rerun: ./setup.sh"
+  fi
+  echo ""
+  exit 1
+fi
+
 # Cross-platform sed -i (macOS requires '' argument)
 _sed_i() {
   if [[ "$OSTYPE" == "darwin"* ]]; then
@@ -81,7 +98,7 @@ echo "[OK] Desktop image"
 
 echo ""
 echo "Building MCP server and dashboard..."
-docker compose build screenbox-mcp screenbox-dashboard
+DOCKER_BUILDKIT=0 docker compose build screenbox-socket-proxy screenbox-mcp screenbox-dashboard
 echo "[OK] All images built"
 
 # 5. Stop old containers and start new ones
@@ -97,30 +114,22 @@ echo "[OK] Services running"
 if [ "$IS_UPDATE" = false ]; then
   echo ""
   echo "Creating demo desktop..."
-  MCP_PORT=$(docker compose port screenbox-mcp 8080 2>/dev/null | cut -d: -f2)
-  MCP_PORT=\${MCP_PORT:-8080}
-  # Wait for MCP to be healthy (up to 30s)
-  for i in $(seq 1 6); do
-    docker compose ps screenbox-mcp 2>/dev/null | grep -q healthy && break
+  # Wait for MCP to be healthy (up to 60s)
+  for i in $(seq 1 12); do
+    if curl -sf http://localhost:8080/api/health >/dev/null 2>&1; then
+      break
+    fi
     sleep 5
   done
-  MCP_PORT=${MCP_PORT:-8080}
-  MCP_CONTAINER=$(docker compose ps -q screenbox-mcp 2>/dev/null)
-  RESULT=$(docker exec "$MCP_CONTAINER" python3 -c "
-import httpx, asyncio, os
-async def go():
-    token = os.environ["SCREENBOX_API_TOKEN"]
-    h = {"Authorization": f"Bearer {token}", "Content-Type": "application/json", "Accept": "application/json, text/event-stream"}
-    async with httpx.AsyncClient(timeout=60) as c:
-        await c.post("http://localhost:8080/mcp", headers=h, json={"jsonrpc":"2.0","id":1,"method":"initialize","params":{"protocolVersion":"2025-03-26","capabilities":{},"clientInfo":{"name":"setup","version":"1.0"}}})
-        r = await c.post("http://localhost:8080/mcp", headers=h, json={"jsonrpc":"2.0","id":2,"method":"tools/call","params":{"name":"desktop_manage","arguments":{"action":"create","desktop_id":"desktop-1","label":"My Desktop"}}})
-        print(r.text[:200])
-asyncio.run(go())
-" 2>&1)
-  if echo "$RESULT" | grep -q running; then
+  RESULT=$(curl -s -X POST -H "Authorization: Bearer ${TOKEN_VAL}" \
+    -H "Content-Type: application/json" \
+    -d '{"id":"desktop-1","label":"My Desktop"}' \
+    http://localhost:8080/api/desktop/create 2>&1)
+  if echo "$RESULT" | grep -q '"ok"'; then
     echo "[OK] Demo desktop created (desktop-1)"
   else
-    echo "[WARN] Could not create demo desktop -- create one from Dashboard"
+    echo "[WARN] Could not create demo desktop: $RESULT"
+    echo "       Create one from Dashboard: http://localhost:16000"
   fi
 fi
 

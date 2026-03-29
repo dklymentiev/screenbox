@@ -118,6 +118,9 @@ class DesktopManager:
                  "--format", "{{.Names}}\t{{.Status}}"],
                 capture_output=True, text=True, timeout=10,
             )
+            if result.returncode != 0:
+                log.warning("docker ps failed, skipping ghost cleanup")
+                return
             # Build set of existing containers
             existing = {}
             for line in result.stdout.strip().split("\n"):
@@ -135,6 +138,11 @@ class DesktopManager:
                 existing[did] = status
 
             # Remove ghosts (in memory but not in Docker)
+            # Safety: only remove if docker ps returned at least some containers
+            # (empty result may mean docker/proxy is not ready yet)
+            if not existing and self._desktops:
+                log.warning("docker ps returned no containers but we have %d in memory — skipping ghost cleanup", len(self._desktops))
+                return
             ghosts = [did for did in list(self._desktops.keys())
                       if did not in existing]
             for did in ghosts:
@@ -197,6 +205,22 @@ class DesktopManager:
                 raise RuntimeError(
                     "Docker not found. Install Docker: https://docs.docker.com/get-docker/"
                 )
+
+    def _check_desktop_image(self):
+        """Verify desktop image exists. Called before create()."""
+        image = self.config.image
+        try:
+            result = subprocess.run(
+                ["docker", "image", "inspect", image],
+                capture_output=True, text=True, timeout=5,
+            )
+            if result.returncode != 0:
+                raise RuntimeError(
+                    f"Desktop image '{image}' not found. "
+                    f"Run: ./setup.sh to build it."
+                )
+        except FileNotFoundError:
+            pass  # docker not found — _check_docker handles this
 
     # Compose service names to exclude from desktop recovery (container_name or service suffix)
     _COMPOSE_SERVICES = {
@@ -269,8 +293,7 @@ class DesktopManager:
                 )
                 self._desktops[desktop_id] = info
 
-                # Ensure desktop is on the managed network (may be missing
-                # if desktop was created before the current compose setup)
+                # Ensure desktop is on the managed network (needed for VNC proxy)
                 if self.config.docker_network and state == DesktopState.RUNNING:
                     subprocess.run(
                         ["docker", "network", "connect",
@@ -463,6 +486,7 @@ class DesktopManager:
             "-e", f"SCREENBOX_PROFILE={profile_container_path}",
             "-e", f"SCREENBOX_RECORDINGS={recordings_container_path}",
             "--shm-size=256m",
+            "--dns", "8.8.8.8", "--dns", "1.1.1.1",
             "--label", "screenbox.desktop=true",
             image or self.config.image,
         ]
@@ -481,7 +505,8 @@ class DesktopManager:
 
             info.container_id = result.stdout.strip()[:12]
 
-            # Connect to network before start (so container has network on boot)
+            # Connect to managed network (needed for VNC/RDP proxy from dashboard).
+            # Desktop also stays on bridge for reliable DNS (dual-network).
             if self.config.docker_network:
                 subprocess.run(
                     ["docker", "network", "connect",

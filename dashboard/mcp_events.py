@@ -209,16 +209,25 @@ async def mcp_events_consumer():
 
 
 async def _screenshot_loop():
-    """Periodically fetch screenshots from MCP API."""
-    _log("Screenshot loop started (interval=%ds)", SCREENSHOT_TTL)
+    """Periodically fetch screenshots from MCP API.
+    Skips when no dashboard viewers are connected (saves CPU).
+    """
+    from .state import _ws_subscribers
+    _log("Screenshot loop started (interval=%ds, viewer-aware)", SCREENSHOT_TTL)
     # Wait for MCP events consumer to populate cache
     await asyncio.sleep(3)
     while True:
         try:
+            # Skip screenshots if no one is viewing the dashboard
+            if not _ws_subscribers:
+                await asyncio.sleep(SCREENSHOT_TTL)
+                continue
             with _cache_lock:
                 desktops = list(_cache["desktops"])
-            if desktops:
-                await _fetch_screenshots(desktops)
+            # Only fetch screenshots for running desktops
+            running = [d for d in desktops if d.get("state") == "running"]
+            if running:
+                await _fetch_screenshots(running)
         except Exception as e:
             _log("Screenshot fetch error: %s", e)
         await asyncio.sleep(SCREENSHOT_TTL)

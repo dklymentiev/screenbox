@@ -11,6 +11,7 @@ import asyncio
 import collections
 import json
 import hmac
+import httpx
 import logging
 import os
 import subprocess
@@ -170,13 +171,20 @@ def register(mcp):
             return _auth_error()
 
         def _get_stats(desktop_id: str) -> dict:
-            """Read cgroup v2 stats + disk usage from inside container."""
+            """Read cgroup v1/v2 stats + disk usage from inside container."""
             try:
                 result = manager.exec(desktop_id, [
                     "bash", "-c",
-                    'echo "MEM_USED=$(cat /sys/fs/cgroup/memory.current 2>/dev/null || echo 0)";'
-                    'echo "MEM_MAX=$(cat /sys/fs/cgroup/memory.max 2>/dev/null || echo 0)";'
-                    'echo "CPU_USEC=$(grep usage_usec /sys/fs/cgroup/cpu.stat 2>/dev/null | cut -d" " -f2 || echo 0)";'
+                    # cgroup v2 first, fallback to v1
+                    'MEM_V2=$(cat /sys/fs/cgroup/memory.current 2>/dev/null);'
+                    'MEM_V1=$(cat /sys/fs/cgroup/memory/memory.usage_in_bytes 2>/dev/null);'
+                    'echo "MEM_USED=${MEM_V2:-${MEM_V1:-0}}";'
+                    'MAX_V2=$(cat /sys/fs/cgroup/memory.max 2>/dev/null);'
+                    'MAX_V1=$(cat /sys/fs/cgroup/memory/memory.limit_in_bytes 2>/dev/null);'
+                    'echo "MEM_MAX=${MAX_V2:-${MAX_V1:-0}}";'
+                    'CPU_V2=$(grep usage_usec /sys/fs/cgroup/cpu.stat 2>/dev/null | cut -d" " -f2);'
+                    'CPU_V1=$(cat /sys/fs/cgroup/cpuacct/cpuacct.usage 2>/dev/null);'
+                    'echo "CPU_USEC=${CPU_V2:-${CPU_V1:-0}}";'
                     'echo "DISK_MB=$(du -sm /home 2>/dev/null | cut -f1 || echo 0)"'
                 ], timeout=5)
                 stdout = result.stdout.decode() if result.stdout else ""
@@ -288,6 +296,31 @@ def register(mcp):
             elif action == "start":
                 manager.start(did)
             return JSONResponse({"ok": True, "desktop_id": did, "action": action})
+        except Exception as e:
+            return JSONResponse({"error": str(e)}, status_code=500)
+
+    # -- Overlay --
+
+    @mcp.custom_route("/api/desktop/overlay", methods=["POST"])
+    async def api_desktop_overlay(request: Request) -> Response:
+        if not _check_auth(request):
+            return _auth_error()
+        body = await request.json()
+        did = body.get("id", "").strip()
+        text = body.get("text", "").strip()
+        if not did or not text:
+            return JSONResponse({"error": "Missing id or text"}, status_code=400)
+        try:
+            d = get_desktop(did)
+            # Parse "enabled=1,cursor=1,dots=1,trail=0"
+            parts = dict(p.split("=") for p in text.replace("\n", ",").split(",") if "=" in p)
+            result = d.overlay_mode(
+                enabled=parts.get("enabled", "1") == "1",
+                cursor=parts.get("cursor", "1") == "1",
+                dots=parts.get("dots", "1") == "1",
+                trail=parts.get("trail", "0") == "1",
+            )
+            return JSONResponse({"ok": True, **result})
         except Exception as e:
             return JSONResponse({"error": str(e)}, status_code=500)
 
@@ -492,9 +525,25 @@ def register(mcp):
 
     @mcp.custom_route("/api/health", methods=["GET"])
     async def api_health(request: Request) -> Response:
+        issues = []
+        # Check desktop image exists (via Docker API, works through tcp proxy)
+        image = manager.config.image
+        try:
+            docker_host = os.environ.get("DOCKER_HOST", "")
+            if docker_host.startswith("tcp://"):
+                base = docker_host.replace("tcp://", "http://")
+            else:
+                base = "http://localhost:2375"
+            async with httpx.AsyncClient(timeout=5) as client:
+                r = await client.get(f"{base}/v1.43/images/{image}/json")
+                if r.status_code != 200:
+                    issues.append(f"Desktop image '{image}' not found. Run ./setup.sh")
+        except Exception:
+            pass
         return JSONResponse({
-            "ok": True,
+            "ok": len(issues) == 0,
             "desktops": len(manager._desktops),
+            "issues": issues,
             "ts": time.time(),
         })
 

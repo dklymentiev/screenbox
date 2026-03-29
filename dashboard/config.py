@@ -4,7 +4,7 @@ import os
 import re
 from pathlib import Path
 
-__version__ = "0.14.0"
+__version__ = "0.16.0"
 
 _VALID_ID = re.compile(r'^[a-zA-Z0-9][a-zA-Z0-9_-]{0,63}$')
 
@@ -22,7 +22,7 @@ DASHBOARD_AUTH = os.environ.get("SCREENBOX_DASHBOARD_AUTH", "auto")
 CONFIG_FILE = os.path.join(DESKTOPS_DIR, ".dashboard-config.json")
 DOCKER_NETWORK = os.environ.get("SCREENBOX_DOCKER_NETWORK", "bridge")
 DESKTOP_IMAGE = os.environ.get("SCREENBOX_DESKTOP_IMAGE", "screenbox:latest")
-SCREENSHOT_TTL = int(os.environ.get("SCREENBOX_SCREENSHOT_TTL", "5"))
+SCREENSHOT_TTL = int(os.environ.get("SCREENBOX_SCREENSHOT_TTL", "15"))
 
 MCP_API_URL = os.environ.get("SCREENBOX_MCP_API_URL", "http://screenbox-mcp:8080")
 MCP_CONTAINER = os.environ.get("SCREENBOX_MCP_CONTAINER", "screenbox-screenbox-mcp-1")

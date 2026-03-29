@@ -85,8 +85,7 @@ echo ""
 echo "4. Dashboard -> MCP proxy..."
 CREATE_RESP=$(curl -s -b "sb_token=$TOKEN" -X POST -H "Content-Type: application/json" \
   -d '{"id":"sb-test-run"}' http://localhost:16000/api/create 2>/dev/null)
-CREATE_OK=$(echo "$CREATE_RESP" | python3 -c "import sys,json; print(json.load(sys.stdin).get('ok',''))" 2>/dev/null)
-if [ "$CREATE_OK" != "True" ]; then
+if ! echo "$CREATE_RESP" | grep -q '"ok".*true'; then
   echo "[FAIL] Dashboard create: $CREATE_RESP"
   # Cleanup just in case
   curl -s -b "sb_token=$TOKEN" -X POST -H "Content-Type: application/json" \

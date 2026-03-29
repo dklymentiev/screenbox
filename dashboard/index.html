@@ -96,6 +96,17 @@
       <button class="mode-btn" id="btn-tab-logs" onclick="setActiveTab('logs')">logs</button>
       <button class="mode-btn" id="btn-tab-knowledge" onclick="setActiveTab('knowledge')">knowledge</button>
       <button class="mode-btn" id="btn-tab-recordings" onclick="setActiveTab('recordings')">rec</button>
+      <span class="tab-sep"></span>
+      <label class="toggle-switch" title="Mouse trail">
+        <input type="checkbox" id="btn-toggle-trail" onchange="toggleOverlay('trail')">
+        <span class="toggle-slider"></span>
+        <span class="toggle-label">trail</span>
+      </label>
+      <label class="toggle-switch" title="Click dots">
+        <input type="checkbox" id="btn-toggle-dots" onchange="toggleOverlay('dots')" checked>
+        <span class="toggle-slider"></span>
+        <span class="toggle-label">dots</span>
+      </label>
       <span id="preview-stats"></span>
       <span class="toolbar-spacer"></span>
       <a class="toolbar-link" id="toolbar-fullscreen" href="#" target="_blank">open fullscreen</a>

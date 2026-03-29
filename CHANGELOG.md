@@ -1,5 +1,44 @@
 # Changelog
 
+## 0.16.0 (2026-03-29) -- Persistence & Cross-Platform Build
+
+### Desktop Persistence
+- **Browser history survives restart** -- periodic backup (every 30s) using SQLite backup API with `nolock=1` to read Chrome's locked databases. Restore on container start with `exit_type=Normal` to prevent Chrome crash recovery wipe.
+- **Installed packages auto-restore** -- `desktop_manage(action="install")` records packages in `~/.screenbox/installed-packages.txt`. Entrypoint re-installs missing packages on container start (as root, before dropping to screenbox user).
+- **Browser profile migration safety** -- Chrome-to-Chromium profile migration only runs when Google Chrome binary is not installed (previously deleted Chrome profile on every start).
+- **XFCE settings preserved** -- `cp -n` instead of `cp -f` for default configs, user customizations survive restarts.
+- **Graceful Chrome shutdown** -- entrypoint sends SIGTERM to Chrome and waits up to 5s before force kill.
+
+### Build & Setup
+- **One-command setup** -- `setup.ps1` (Windows) and `setup.sh` (Linux/macOS) build all images, start services, create demo desktop. Full progress output with elapsed time per step.
+- **Docker build DNS fix** -- `dns: [8.8.8.8, 1.1.1.1]` in docker-compose.yml for all services. Resolves build hangs on Windows/WSL2.
+- **BuildKit OOM fix** -- MCP and dashboard images build with `DOCKER_BUILDKIT=0` (legacy builder). BuildKit OOM-kills tesseract-ocr install on systems with limited memory.
+- **Split MCP Dockerfile** -- monolithic `RUN` with 3x apt-get split into 4 separate layers for better caching and lower peak memory.
+- **Apple Silicon support** -- `FROM --platform=linux/amd64` in desktop Dockerfile ensures consistent builds on ARM Macs via Rosetta.
+- **Docker preflight check** -- setup scripts verify Docker daemon is running before attempting builds.
+
+### Dashboard
+- **VNC thumbnails** -- live VNC streams replace screenshot polling for desktop cards. CPU usage dropped from 84% to 0.3%.
+- **Overlay toggles** -- trail/dots toggle switches in preview toolbar.
+- **Removed ghost image option** -- `screenbox:xfce` dropdown removed, only `screenbox:latest` available.
+- **Duplicate card fix** -- pending desktop cards no longer duplicate when SSE event arrives before refresh cycle.
+
+### MCP Server
+- **Health check via Docker API** -- image existence check uses httpx to Docker API (works through tcp proxy) instead of subprocess `docker image inspect`.
+- **cgroup v1/v2 stats** -- CPU/RAM stats work on both cgroup versions (Docker Desktop, older kernels).
+- **Memory limit increased** -- 512MB to 2GB (MCP with tesseract needs more under load).
+- **Ghost cleanup safety** -- skips cleanup if `docker ps` returns empty (prevents deleting all desktops when proxy is not ready).
+- **MCP session stability** -- removed `stateless_http=True` that caused session drops.
+
+### Docker Proxy
+- **Image inspect endpoint** -- added `GET /v1.43/images/{name}/json` to proxy whitelist for health checks.
+
+### Infrastructure
+- **Desktop DNS** -- `--dns 8.8.8.8` on `docker create` for reliable package installs inside desktops.
+- **gnome-keyring in image** -- pre-installed for Chrome cookie encryption, auto-unlocked with empty password.
+- **Click indicator default config** -- writes config on start so indicator renders immediately.
+- **Integration test fix** -- replaced `python3 -c` JSON parsing with `grep` (works on Windows without Python).
+
 ## 0.15.0 (2026-03-22) -- Knowledge Compilation Pipeline
 
 ### Knowledge Compilation

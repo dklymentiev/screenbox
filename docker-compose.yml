@@ -10,6 +10,9 @@ services:
       context: docker
       dockerfile: Dockerfile
     image: screenbox:latest
+    dns:
+      - 8.8.8.8
+      - 1.1.1.1
     entrypoint: ["echo", "Desktop image built"]
     profiles: ["build"]
 
@@ -35,6 +38,9 @@ services:
     build:
       context: .
       dockerfile: docker/mcp/Dockerfile
+    dns:
+      - 8.8.8.8
+      - 1.1.1.1
     ports:
       - "127.0.0.1:8080:8080"
     volumes:
@@ -58,7 +64,7 @@ services:
     deploy:
       resources:
         limits:
-          memory: 512m
+          memory: 2g
           cpus: "1.0"
 
   screenbox-dashboard:
@@ -68,6 +74,9 @@ services:
     build:
       context: dashboard
       dockerfile: Dockerfile
+    dns:
+      - 8.8.8.8
+      - 1.1.1.1
     ports:
       - "127.0.0.1:16000:16000"
     volumes:

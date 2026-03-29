@@ -135,6 +135,20 @@ def register(mcp, get_desktop, get_manager, log_action, app_catalog):
         }
         if not ok:
             out["stderr"] = stderr[-500:]
+        else:
+            # Record installed packages in volume for auto-restore on image rebuild
+            # Store actual apt package names (not catalog app names) so entrypoint can reinstall
+            if catalog_entry:
+                pkgs = " ".join(catalog_entry.get("packages", [app]))
+            else:
+                pkgs = app
+            mgr.exec(desktop_id, [
+                "bash", "-c",
+                f'mkdir -p /home/screenbox/.screenbox && '
+                f'for p in {pkgs}; do '
+                f'grep -qxF "$p" /home/screenbox/.screenbox/installed-packages.txt 2>/dev/null || '
+                f'echo "$p" >> /home/screenbox/.screenbox/installed-packages.txt; done'
+            ], timeout=5, user="root")
         log_action(desktop_id, "desktop_install", {"app": app}, out, t0)
         return json.dumps(out, indent=2)
 

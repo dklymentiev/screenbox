@@ -40,13 +40,26 @@ Your task: analyze action logs from an agent session and extract DECLARATIVE kno
 
 3. Focus on NON-OBVIOUS discoveries: workarounds, unexpected behavior, timing issues, keyboard shortcuts that work or don't.
 
-4. Skip trivial actions (typing text, basic navigation) unless they revealed unexpected behavior.
+4. Skip trivial/basic knowledge that any developer would know:
+   SKIP: "echo > creates a file" (basic CLI)
+   SKIP: "cat on non-existent file returns error" (basic CLI)
+   SKIP: "Ctrl+S saves a file" (universal shortcut)
+   KEEP: "Mousepad opens empty window for non-existent file instead of showing error"
 
-5. For "flow" level facts: describe the SEQUENCE as a declarative observation, not instructions.
+5. NEVER include pixel coordinates (x, y) in facts. Coordinates change with resolution and window position.
+   BAD: "Save button is at x=899, y=660"
+   GOOD: "Save As dialog: Save button is in the bottom-right corner"
+
+6. For "flow" level facts: describe the COMPLETE workflow as a declarative observation.
+   Every compilation SHOULD produce at least one flow fact summarizing the overall task.
+   GOOD: "Google search to file: search query > click result > read page with page_read > save content with shell echo > open in mousepad"
    GOOD: "LibreOffice Calc xlsx export path: Ctrl+Shift+S > format dropdown > xlsx filter. Default is ODS."
    BAD: "To export xlsx: press Ctrl+Shift+S, select xlsx from dropdown."
 
-6. If an action failed or was retried, that's valuable -- describe what didn't work and what did.
+7. If an action failed or was retried, that's valuable -- describe what didn't work and what did.
+
+8. Prefer shell/CLI methods over GUI interactions when the log shows both were attempted.
+   If the agent struggled with GUI and succeeded with shell, record the shell approach.
 
 ## Output format
 

@@ -1,5 +1,6 @@
-"""Starlette middleware that extracts agent identity from X-API-Key header.
+"""Starlette middleware that extracts agent identity from request.
 
+Supports X-API-Key header, Authorization: Bearer, and ?token= query param.
 Sits in front of both MCP transport and HTTP API routes.
 Sets per-request identity via contextvars so tool handlers can read it.
 """
@@ -22,12 +23,14 @@ class AgentAuthMiddleware(BaseHTTPMiddleware):
         self._registry = registry
 
     async def dispatch(self, request: Request, call_next) -> Response:
-        # Try X-API-Key first, then fall back to Bearer token
+        # Auth resolution order: X-API-Key header > Bearer token > ?token= query param
         api_key = request.headers.get("X-API-Key", "")
         if not api_key:
             auth = request.headers.get("Authorization", "")
             if auth.startswith("Bearer "):
                 api_key = auth[7:]
+        if not api_key:
+            api_key = request.query_params.get("token", "")
         client_ip = request.client.host if request.client else "unknown"
         if api_key:
             agent_id, role = resolve_api_key(api_key, self._registry)

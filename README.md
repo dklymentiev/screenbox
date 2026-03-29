@@ -64,23 +64,32 @@ Then tell your agent:
 
 ## Authentication
 
-Screenbox uses API keys for agent identity. Each agent registers once and uses
-its key for all subsequent requests.
+Screenbox supports three auth modes depending on your setup.
+
+### Strict Mode (default: on)
+
+Set `SCREENBOX_REQUIRE_AUTH=false` in `.env` to disable. When disabled, all
+agents have full access without authentication -- suitable for single-user
+or VPN-protected setups.
 
 ### Admin Access
 
 Set `SCREENBOX_ADMIN_KEY` in `.env` -- full access to all desktops.
 The `SCREENBOX_API_TOKEN` (Bearer token) also grants admin access.
 
-Pass via `X-API-Key` header or `Authorization: Bearer <token>` header.
+Token can be passed via (in priority order):
+1. `X-API-Key` header
+2. `Authorization: Bearer <token>` header
+3. `?token=<token>` query parameter in URL
 
-### Agent Registration
+### Agent Registration (multi-agent setups)
 
 ```
 1. Register:  desktop_manage(action="register", agent_id="my-bot", label="My Bot")
               -> returns api_key (save it!)
 
-2. Use key:   Pass api_key via X-API-Key header on every request
+2. Login:     desktop_manage(action="login", agent_id="my-bot", text="<api_key>")
+              -> session stored on server for this MCP connection
 
 3. Create:    desktop_manage(action="create", desktop_id="work-1")
               -> desktop owned by "my-bot"
@@ -89,6 +98,9 @@ Pass via `X-API-Key` header or `Authorization: Bearer <token>` header.
               -> only "my-bot" can access "work-1"
 ```
 
+Step 2 (login) is needed once per session. Alternatively, pass the api_key
+via header or `?token=` URL param to skip the login step.
+
 ### Ownership Rules
 
 - Desktop created by an agent belongs to that agent (persists across restarts)
@@ -96,7 +108,9 @@ Pass via `X-API-Key` header or `Authorization: Bearer <token>` header.
 - Agents see only their own desktops + shared desktops
 - Admin sees and manages all desktops
 
-### MCP Client Config (with auth)
+### MCP Client Config
+
+**Option A -- headers (if your MCP client supports them):**
 
 ```json
 {
@@ -106,6 +120,30 @@ Pass via `X-API-Key` header or `Authorization: Bearer <token>` header.
       "headers": {
         "Authorization": "Bearer <your-api-token>"
       }
+    }
+  }
+}
+```
+
+**Option B -- token in URL (works with any MCP client):**
+
+```json
+{
+  "mcpServers": {
+    "screenbox": {
+      "url": "http://localhost:8080/mcp?token=<your-api-token>"
+    }
+  }
+}
+```
+
+**Option C -- no auth (strict mode off):**
+
+```json
+{
+  "mcpServers": {
+    "screenbox": {
+      "url": "http://localhost:8080/mcp"
     }
   }
 }

@@ -18,8 +18,10 @@
 - **Docker preflight check** -- setup scripts verify Docker daemon is running before attempting builds.
 
 ### Dashboard
+- **Two-step destroy** -- destroy removes container but keeps data (state -> "saved"). Saved desktops shown as cards with Launch/Delete buttons. Delete data removes home volume + dossier permanently. No more orphaned data on disk.
 - **VNC thumbnails** -- live VNC streams replace screenshot polling for desktop cards. CPU usage dropped from 84% to 0.3%.
 - **Overlay toggles** -- trail/dots toggle switches in preview toolbar.
+- **Show saved state persisted** -- toggle state saved in localStorage.
 - **Removed ghost image option** -- `screenbox:xfce` dropdown removed, only `screenbox:latest` available.
 - **Duplicate card fix** -- pending desktop cards no longer duplicate when SSE event arrives before refresh cycle.
 

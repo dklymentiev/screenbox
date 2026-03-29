@@ -274,6 +274,20 @@ def register(mcp):
         except Exception as e:
             return JSONResponse({"error": str(e)}, status_code=500)
 
+    @mcp.custom_route("/api/desktop/delete-data", methods=["POST"])
+    async def api_desktop_delete_data(request: Request) -> Response:
+        if not _check_auth(request):
+            return _auth_error()
+        body = await request.json()
+        did = body.get("id", "").strip()
+        if not did:
+            return JSONResponse({"error": "Missing id"}, status_code=400)
+        try:
+            deleted = manager.delete_data(did)
+            return JSONResponse({"ok": True, "desktop_id": did, "deleted": deleted})
+        except Exception as e:
+            return JSONResponse({"error": str(e)}, status_code=500)
+
     @mcp.custom_route("/api/desktop/control", methods=["POST"])
     async def api_desktop_control(request: Request) -> Response:
         if not _check_auth(request):

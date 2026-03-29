@@ -80,7 +80,16 @@ async def handle_api_destroy(request: web.Request) -> web.Response:
     if result.get("ok"):
         from state import clear_override
         clear_override(desktop_id)
-        emit_state_change(desktop_id, "destroyed")
+        emit_state_change(desktop_id, "saved")
+    return web.json_response(result)
+
+
+async def handle_api_delete_data(request: web.Request) -> web.Response:
+    body = await request.json()
+    desktop_id = body.get("id", "").strip()
+    if not desktop_id or not _VALID_ID.match(desktop_id):
+        return web.json_response({"error": "Invalid desktop ID"}, status=400)
+    result = await mcp_client.delete_desktop_data(desktop_id)
     return web.json_response(result)
 
 
@@ -202,6 +211,7 @@ def setup(app: web.Application):
     app.router.add_get("/api/storage", handle_api_storage)
     app.router.add_post("/api/create", handle_api_create)
     app.router.add_post("/api/destroy", handle_api_destroy)
+    app.router.add_post("/api/delete-data", handle_api_delete_data)
     app.router.add_post("/api/control", handle_api_control)
     app.router.add_post("/api/storage/delete", handle_api_storage_delete)
     app.router.add_post("/api/input", handle_api_input)

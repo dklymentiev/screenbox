@@ -83,10 +83,18 @@ async def create_desktop(desktop_id: str, resolution: str = "",
 
 
 async def destroy_desktop(desktop_id: str, save_snapshot: bool = True) -> dict:
-    """Destroy desktop via MCP API."""
+    """Destroy desktop via MCP API. Data is kept (state -> saved)."""
     body, status = await mcp_post("/api/desktop/destroy", {
         "id": desktop_id,
         "auto_snapshot": save_snapshot,
+    })
+    return body
+
+
+async def delete_desktop_data(desktop_id: str) -> dict:
+    """Delete saved desktop data (home volume + dossier)."""
+    body, status = await mcp_post("/api/desktop/delete-data", {
+        "id": desktop_id,
     })
     return body
 

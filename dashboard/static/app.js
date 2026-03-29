@@ -25,13 +25,22 @@ let transitions = {};
 
 function esc(s) { const d = document.createElement('div'); d.textContent = s; return d.innerHTML; }
 
-let _showSaved = false;
+let _showSaved = localStorage.getItem('sb_showSaved') === '1';
 function toggleSaved() {
   _showSaved = !_showSaved;
+  localStorage.setItem('sb_showSaved', _showSaved ? '1' : '0');
   document.getElementById('grid').classList.toggle('show-saved', _showSaved);
   const btn = document.getElementById('btn-saved');
   btn.textContent = _showSaved ? 'hide saved' : 'show saved';
   btn.classList.toggle('active', _showSaved);
+}
+// Restore saved toggle state on load
+if (_showSaved) {
+  document.addEventListener('DOMContentLoaded', () => {
+    document.getElementById('grid')?.classList.add('show-saved');
+    const btn = document.getElementById('btn-saved');
+    if (btn) { btn.textContent = 'hide saved'; btn.classList.add('active'); }
+  });
 }
 
 function nextDesktopId(desktops) {
@@ -251,34 +260,6 @@ async function launchSaved(id) {
   setTimeout(refresh, 2000);
 }
 
-async function deleteSavedData(id) {
-  const ok = await showModal(
-    'delete all data for <span class="modal-id">' + id + '</span>?<br>'
-    + '<span style="font-size:11px;color:#b07070;line-height:1.8">appdata, downloads, workspace -- permanently removed</span>', true
-  );
-  if (!ok) return;
-  // Show destroying state immediately
-  const d = currentDesktops.find(x => x.id === id);
-  if (d) {
-    d.state = 'destroying';
-    transitions[id] = {target: '__destroyed__', ts: Date.now()};
-    renderGrid(currentDesktops);
-  }
-  try {
-    const res = await _apiFetch('/api/storage/delete', {
-      method: 'POST',
-      headers: {'Content-Type': 'application/json'},
-      body: JSON.stringify({id})
-    });
-    const data = await res.json();
-    if (data.error) {
-      showModal(data.error, false);
-      delete transitions[id];
-    }
-  } catch (e) { delete transitions[id]; }
-  setTimeout(refresh, 500);
-}
-
 let _creating = false;
 let _createFormOpen = false;
 let _createFormId = '';
@@ -407,16 +388,16 @@ function _toast(msg) {
 async function destroyDesktop(id) {
   const ok = await showModal(
     'destroy <span class="modal-id">' + id + '</span>?<br>'
-    + '<span style="font-size:11px;color:#b07070;line-height:1.8">removed: container, running processes, memory</span><br>'
-    + '<span style="font-size:11px;color:#8090a8;line-height:1.8">kept: appdata, downloads, workspace (on disk)</span>', true
+    + '<span style="font-size:11px;color:#b07070;line-height:1.8">removes container and processes</span><br>'
+    + '<span style="font-size:11px;color:#8090a8;line-height:1.8">data is kept -- delete separately</span>', true
   );
   if (!ok) return;
 
-  // Show "destroying" spinner immediately
+  // Show "destroying" spinner, then transition to saved
   const d = currentDesktops.find(x => x.id === id);
   if (d) {
     d.state = 'destroying';
-    transitions[id] = {target: '__destroyed__', ts: Date.now()};
+    transitions[id] = {target: 'saved', ts: Date.now()};
     renderGrid(currentDesktops);
   }
 
@@ -427,6 +408,26 @@ async function destroyDesktop(id) {
 
   try {
     await _apiFetch('/api/destroy', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({id})
+    });
+  } catch (e) {}
+  // Auto-show saved cards so user sees the saved state
+  if (!_showSaved) toggleSaved();
+  setTimeout(refresh, 500);
+}
+
+async function deleteSavedData(id) {
+  const ok = await showModal(
+    'delete all data for <span class="modal-id">' + id + '</span>?<br>'
+    + '<span style="font-size:11px;color:#b07070;line-height:1.8">permanently removes: browser profile, downloads, installed apps</span><br>'
+    + '<span style="font-size:11px;color:#b07070;line-height:1.8">this cannot be undone</span>', true
+  );
+  if (!ok) return;
+
+  try {
+    await _apiFetch('/api/delete-data', {
       method: 'POST',
       headers: {'Content-Type': 'application/json'},
       body: JSON.stringify({id})

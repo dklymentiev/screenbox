@@ -53,6 +53,7 @@ class DesktopState(str, Enum):
     STARTING = "starting"
     RUNNING = "running"
     PAUSED = "paused"
+    SAVED = "saved"
     ERROR = "error"
     HUMAN_CONTROLLED = "human_controlled"
 
@@ -144,7 +145,8 @@ class DesktopManager:
                 log.warning("docker ps returned no containers but we have %d in memory — skipping ghost cleanup", len(self._desktops))
                 return
             ghosts = [did for did in list(self._desktops.keys())
-                      if did not in existing]
+                      if did not in existing
+                      and self._desktops[did].state != DesktopState.SAVED]
             for did in ghosts:
                 log.info("Removing ghost desktop %s (container no longer exists)", did)
                 del self._desktops[did]
@@ -305,6 +307,29 @@ class DesktopManager:
 
             if found:
                 log.info("Recovered %d desktop(s): %s", len(found), ", ".join(sorted(found)))
+
+            # Discover saved desktops (data on volume, no container)
+            desktops_dir = os.path.join(self.config.base_dir, "desktops")
+            if os.path.isdir(desktops_dir):
+                for name in os.listdir(desktops_dir):
+                    if name in self._desktops or name in found:
+                        continue  # already recovered as running/stopped
+                    dossier = os.path.join(desktops_dir, name)
+                    if not os.path.isdir(dossier):
+                        continue
+                    # Check if home volume also exists
+                    home_vol = f"screenbox-{name}-home"
+                    vol_check = subprocess.run(
+                        ["docker", "volume", "inspect", home_vol],
+                        capture_output=True, text=True, timeout=5,
+                    )
+                    if vol_check.returncode != 0:
+                        continue  # no home volume = incomplete data, skip
+                    self._desktops[name] = DesktopInfo(
+                        desktop_id=name,
+                        state=DesktopState.SAVED,
+                    )
+                    log.info("Found saved desktop: %s", name)
         except Exception as e:
             log.warning("Failed to recover existing containers: %s", e)
 
@@ -562,27 +587,49 @@ class DesktopManager:
             raise RuntimeError("Container creation timed out after 30s")
 
     def destroy(self, desktop_id: str, auto_snapshot: bool = True) -> bool:
-        """Stop and remove a desktop container.
+        """Stop and remove a desktop container. Data is kept (state -> saved).
 
-        Args:
-            auto_snapshot: Save snapshot before destroying (default True).
-                          Set False to discard state permanently.
+        Use delete_data() to remove saved data afterwards.
         """
         if desktop_id not in self._desktops:
             return False
-        snapshot_ok = False
-        if auto_snapshot:
-            snap_path = self.snapshot(desktop_id, "auto-before-destroy")
-            snapshot_ok = snap_path is not None
-            if not snapshot_ok:
-                log.warning("Pre-destroy snapshot FAILED for %s", desktop_id)
         self._remove_container(desktop_id)
-        del self._desktops[desktop_id]
-        self._emit("destroyed", desktop_id, snapshot_saved=snapshot_ok)
-        log.info("Destroyed desktop %s (snapshot_saved=%s)", desktop_id, snapshot_ok)
-        log_lifecycle(self.config.logs_dir, "destroyed", desktop_id,
-                     snapshot_saved=snapshot_ok)
+        info = self._desktops[desktop_id]
+        info.state = DesktopState.SAVED
+        info.ports = {}
+        self._emit("state_changed", desktop_id, state="saved")
+        log.info("Destroyed desktop %s (data kept as saved)", desktop_id)
+        log_lifecycle(self.config.logs_dir, "destroyed", desktop_id)
         return True
+
+    def delete_data(self, desktop_id: str) -> bool:
+        """Delete all saved data for a desktop (home volume + dossier).
+
+        Call after destroy() to fully remove a desktop, or standalone
+        to clean up orphaned saved data.
+        """
+        import shutil
+        deleted = False
+        # Remove dossier (recordings, knowledge, profile)
+        dossier = os.path.join(self.config.base_dir, "desktops", desktop_id)
+        if os.path.isdir(dossier):
+            shutil.rmtree(dossier, ignore_errors=True)
+            log.info("Removed desktop data: %s", dossier)
+            deleted = True
+        # Remove named home volume (browser profile, installed apps, etc.)
+        home_vol = f"screenbox-{desktop_id}-home"
+        result = subprocess.run(
+            ["docker", "volume", "rm", "-f", home_vol],
+            capture_output=True, text=True, timeout=10,
+        )
+        if result.returncode == 0:
+            log.info("Removed home volume: %s", home_vol)
+            deleted = True
+        # Remove from in-memory desktop list
+        if desktop_id in self._desktops:
+            del self._desktops[desktop_id]
+            self._emit("destroyed", desktop_id)
+        return deleted
 
     def _remove_container(self, desktop_id: str):
         """Force remove the container."""

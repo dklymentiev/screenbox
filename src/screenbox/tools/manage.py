@@ -376,7 +376,8 @@ def register(mcp, get_desktop, get_manager, log_action, app_catalog):
             result = {"logged_out": True}
         elif action == "whoami":
             from ..globals import guard as _guard, registry as _reg
-            agent = _guard.current_agent
+            from ..request_context import get_current_agent
+            agent = get_current_agent() or _guard.current_agent
             if agent:
                 desktops = _reg.get_agent_desktops(agent)
                 result = {"agent_id": agent, "authenticated": True, "desktops": desktops}

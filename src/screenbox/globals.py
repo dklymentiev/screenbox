@@ -366,7 +366,26 @@ the reasoning behind each action.
 # When deployed on a network (0.0.0.0), disable DNS rebinding checks
 # so external clients can connect using the server's real hostname/IP.
 _mcp_host = os.environ.get("SCREENBOX_HOST", "127.0.0.1")
-_mcp_kwargs: dict = {"instructions": MCP_INSTRUCTIONS}
+def _build_instructions():
+    """Build MCP instructions with compiled knowledge appended."""
+    instructions = MCP_INSTRUCTIONS
+    try:
+        from .knowledge import get_store
+        store = get_store()
+        # Collect all knowledge facts across all desktops
+        all_facts = []
+        for target in store.list_targets():
+            facts = store.get_facts(target["slug"])
+            for f in facts:
+                all_facts.append(f"- [{f.get('level','?')}] {f.get('domain','?')}: {f.get('text','')}")
+        if all_facts:
+            instructions += "\n\n## Compiled Knowledge (learned from previous sessions)\n"
+            instructions += "\n".join(all_facts[:30])  # limit to 30 facts
+    except Exception:
+        pass  # knowledge not available — use static instructions only
+    return instructions
+
+_mcp_kwargs: dict = {"instructions": _build_instructions()}
 if _mcp_host != "127.0.0.1":
     _mcp_kwargs["host"] = _mcp_host
 

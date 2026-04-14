@@ -19,8 +19,10 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     curl \
     wget \
     ca-certificates \
+    locales \
     fonts-liberation \
     fonts-cantarell \
+    fonts-dejavu-core \
     fonts-noto-color-emoji \
     libnss3 \
     libatk-bridge2.0-0 \
@@ -37,7 +39,12 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     gnome-keyring libsecret-1-0 \
     tigervnc-standalone-server \
     xrdp \
-    && rm -rf /var/lib/apt/lists/*
+    && rm -rf /var/lib/apt/lists/* \
+    && sed -i 's/# en_US.UTF-8/en_US.UTF-8/' /etc/locale.gen \
+    && locale-gen en_US.UTF-8
+
+ENV LANG=en_US.UTF-8
+ENV LC_ALL=en_US.UTF-8
 
 # XFCE desktop (lightweight, ~400MB vs MATE ~1GB)
 RUN apt-get update && apt-get install -y --no-install-recommends \

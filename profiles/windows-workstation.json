@@ -1,0 +1,32 @@
+{
+  "name": "Windows Workstation",
+  "description": "Generic Windows 11 workstation -- Chrome 136, Intel Iris Xe, 1920x1080",
+  "container": {
+    "timezone": "America/Los_Angeles",
+    "locale": "en_US.UTF-8",
+    "screen_width": 1920,
+    "screen_height": 1080,
+    "color_depth": 32,
+    "hostname": "DESKTOP-KV7B3N1",
+    "cpus": 12,
+    "memory": "16g",
+    "fonts": ["fonts-liberation", "fonts-noto-core"]
+  },
+  "browser": {
+    "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/136.0.0.0 Safari/537.36",
+    "languages": "en-US,en",
+    "pixel_ratio": 1.0
+  },
+  "profile_extension": {
+    "navigator.platform": "Win32",
+    "navigator.hardwareConcurrency": 12,
+    "navigator.deviceMemory": 8,
+    "navigator.languages": ["en-US", "en"],
+    "webgl.vendor": "Google Inc. (Intel)",
+    "webgl.renderer": "ANGLE (Intel, Intel(R) Iris(R) Xe Graphics Direct3D11 vs_5_0 ps_5_0, D3D11)",
+    "chrome.runtime": true
+  },
+  "network": {
+    "proxy_type": "direct"
+  }
+}

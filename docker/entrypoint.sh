@@ -429,6 +429,7 @@ ${CHROME_BIN} \
     --no-first-run \
     --hide-crash-restore-bubble \
     --password-store=basic \
+    --use-mock-keychain \
     --remote-allow-origins=http://127.0.0.1:9222 \
     --remote-debugging-port=9222 \
     --remote-debugging-address=127.0.0.1 \

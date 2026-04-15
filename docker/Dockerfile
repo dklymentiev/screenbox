@@ -97,7 +97,9 @@ RUN echo "deb http://deb.debian.org/debian bookworm main" > /etc/apt/sources.lis
     && rm -rf /var/lib/apt/lists/*
 
 # Non-root user
-RUN useradd -m -s /bin/bash -u 1000 screenbox
+RUN useradd -m -s /bin/bash -u 1000 screenbox \
+    && echo 'ulimit -c 0' >> /home/screenbox/.bashrc \
+    && echo '* hard core 0' >> /etc/security/limits.conf
 
 # Extension files (copy as root for CRX build)
 COPY extension/ /opt/screenbox/extension/

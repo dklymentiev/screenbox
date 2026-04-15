@@ -730,6 +730,19 @@ class DesktopManager:
         if not info or info.state not in (DesktopState.RUNNING, DesktopState.PAUSED, DesktopState.STOPPED):
             return None
 
+        # Prevent concurrent snapshots for the same desktop
+        if desktop_id in self._snapshot_active:
+            log.warning("Snapshot already running for %s, skipping", desktop_id)
+            return None
+        self._snapshot_active.add(desktop_id)
+
+        try:
+            return self._do_snapshot(desktop_id, info, label)
+        finally:
+            self._snapshot_active.discard(desktop_id)
+
+    def _do_snapshot(self, desktop_id: str, info, label: str = "") -> Optional[str]:
+        """Internal snapshot implementation."""
         snap_dir = self.config.snapshot_dir(desktop_id)
         timestamp = int(time.time())
         safe_label = label.replace("/", "-").replace(" ", "_")[:50] if label else ""
@@ -777,7 +790,14 @@ class DesktopManager:
             except OSError:
                 pass
         except subprocess.TimeoutExpired:
-            log.error("Snapshot timed out for %s", desktop_id)
+            log.error("Snapshot timed out for %s, killing orphan tar", desktop_id)
+            # Kill orphan tar process inside container (subprocess.run timeout
+            # only kills docker-exec on host, tar keeps running inside)
+            subprocess.run(
+                ["docker", "exec", "-u", "root", container_name,
+                 "pkill", "-f", "tar cf.*home/screenbox"],
+                capture_output=True, timeout=10,
+            )
             return None
 
         # Enforce retention: keep last 5

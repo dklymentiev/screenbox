@@ -757,6 +757,10 @@ class DesktopManager:
             result = subprocess.run(
                 ["docker", "exec", "-u", "root", container_name,
                  "tar", "cf", "-", "--warning=no-file-changed",
+                 "--exclude=home/screenbox/core",
+                 "--exclude=home/screenbox/core.*",
+                 "--exclude=home/screenbox/.cache/chromium",
+                 "--exclude=home/screenbox/.cache/google-chrome",
                  "-C", "/", "home/screenbox"],
                 capture_output=True, timeout=120,
             )

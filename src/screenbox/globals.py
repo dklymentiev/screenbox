@@ -130,7 +130,7 @@ def log_action(desktop_id: str, tool: str, args: dict,
         agent_id=effective_agent, intent=intent or None, step=step or None,
         source_ip=source_ip or None,
     )
-    # Update last_tool_call to prevent idle auto-pause (#492)
+    # Update last_tool_call to prevent idle auto-pause
     manager.touch(desktop_id)
     return check_intent(tool, intent)
 

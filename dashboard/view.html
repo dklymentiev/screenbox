@@ -166,7 +166,9 @@ body { background: #0a0e14; overflow: hidden; font-family: -apple-system, 'Segoe
         const mine = desktops.find(d => d.id === desktopId);
         if (!mine) {
           showDisconnect('Desktop "' + desktopId + '" no longer exists');
-        } else if (mine.state !== 'running') {
+        // starting only means the dashboard has no screenshot of the desk yet (it takes them while the desk list is
+        // open); the desk is up and this session is live, so only a real stop ends the view
+        } else if (mine.state !== 'running' && mine.state !== 'starting') {
           showDisconnect('Desktop stopped (' + mine.state + ')');
         }
       } catch(e) {}

@@ -8,6 +8,7 @@ Tests the 15 tools registered via register_all():
 
 import json
 import base64
+import sys
 import pytest
 from unittest.mock import MagicMock, patch, PropertyMock
 
@@ -25,8 +26,14 @@ def _make_jpeg(w=100, h=100):
 
 
 @pytest.fixture
-def mcp_env(tmp_path):
+def mcp_env(tmp_path, monkeypatch):
     """Set up MCP environment with mocked desktop and manager."""
+    # Some tools import screenbox.globals inside the call (auth guard, registry, recent actions). Importing the real
+    # module starts a DesktopManager, which needs Docker; a stand-in keeps these unit tests free of Docker.
+    fake_globals = MagicMock()
+    fake_globals.format_recent_actions.return_value = ""
+    fake_globals.registry.is_locked.return_value = False
+    monkeypatch.setitem(sys.modules, "screenbox.globals", fake_globals)
     mcp = FastMCP("test")
     mock_desktop = MagicMock()
     mock_desktop._grid_cols = None
@@ -43,6 +50,7 @@ def mcp_env(tmp_path):
 
     def log_action(desktop_id, tool, params, result, t0, **kw):
         log_calls.append({"tool": tool, "params": params})
+        return ""  # like the real log_action: the intent warning, empty when none
 
     from screenbox.tools import register_all
     register_all(mcp, get_desktop, get_manager, log_action)
@@ -288,13 +296,10 @@ class TestDesktopScreenshot:
         assert isinstance(result, (Image, list))
 
     def test_screenshot_with_knowledge(self, mcp_env):
-        with patch("screenbox.tools.screenshot.get_store") as mock_store_fn:
+        with patch("screenbox.tools.screenshot._inject_knowledge", return_value="[Knowledge: LibreOffice Calc]"):
             mcp_env["desktop"].screenshot.return_value = _make_jpeg()
             mcp_env["desktop"]._xdotool.return_value = "Sheet - LibreOffice Calc"
             mcp_env["desktop"].grid_on = MagicMock()
-            store = MagicMock()
-            store.get_hints_for_window.return_value = "[Knowledge: LibreOffice Calc]"
-            mock_store_fn.return_value = store
 
             result = mcp_env["tools"]["desktop_screenshot"]("d1")
             assert isinstance(result, list)
@@ -353,7 +358,7 @@ class TestDesktopSearchKnowledge:
             mock_store_fn.return_value = store
             mcp_env["desktop"]._xdotool.return_value = "GIMP"
 
-            result = json.loads(mcp_env["tools"]["desktop_search_knowledge"](
+            result = json.loads(mcp_env["tools"]["desktop_knowledge_search"](
                 "d1", query="paths tool"
             ))
             assert len(result["results"]) == 2
@@ -363,7 +368,7 @@ class TestDesktopSearchKnowledge:
             mock_store_fn.return_value = MagicMock()
             mcp_env["desktop"]._xdotool.return_value = "desktop"
 
-            result = json.loads(mcp_env["tools"]["desktop_search_knowledge"](
+            result = json.loads(mcp_env["tools"]["desktop_knowledge_search"](
                 "d1", query="something"
             ))
             assert "error" in result
@@ -375,7 +380,7 @@ class TestDesktopSearchKnowledge:
             mock_store_fn.return_value = store
             mcp_env["desktop"]._xdotool.return_value = "GIMP"
 
-            result = json.loads(mcp_env["tools"]["desktop_search_knowledge"](
+            result = json.loads(mcp_env["tools"]["desktop_knowledge_search"](
                 "d1", query="nonexistent"
             ))
             assert result["results"] == []

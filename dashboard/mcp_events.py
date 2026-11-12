@@ -212,7 +212,7 @@ async def _screenshot_loop():
     """Periodically fetch screenshots from MCP API.
     Skips when no dashboard viewers are connected (saves CPU).
     """
-    from .state import _ws_subscribers
+    from state import _ws_subscribers
     _log("Screenshot loop started (interval=%ds, viewer-aware)", SCREENSHOT_TTL)
     # Wait for MCP events consumer to populate cache
     await asyncio.sleep(3)

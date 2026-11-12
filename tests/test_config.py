@@ -25,7 +25,8 @@ class TestDetectPlatformDefaults:
     @patch("os.path.exists", return_value=False)
     def test_linux_defaults(self, *_):
         result = _detect_platform_defaults()
-        assert result["max_desktops"] == DEFAULT_CONFIG["max_desktops"]
+        assert result["max_desktops"] == 5  # plain Linux (not WSL): 5, below the config ceiling
+        assert result["max_desktops"] < DEFAULT_CONFIG["max_desktops"]
         assert result["memory_per_desktop"] == DEFAULT_CONFIG["memory_per_desktop"]
 
 

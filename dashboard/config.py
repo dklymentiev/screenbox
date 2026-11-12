@@ -4,7 +4,7 @@ import os
 import re
 from pathlib import Path
 
-__version__ = "0.16.0"
+__version__ = "0.16.1"
 
 _VALID_ID = re.compile(r'^[a-zA-Z0-9][a-zA-Z0-9_-]{0,63}$')
 

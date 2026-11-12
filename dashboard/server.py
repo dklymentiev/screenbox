@@ -126,6 +126,84 @@ a:hover {{ background: rgba(26,58,122,0.3); border-color: #2a5aaa; }}
 # ---------------------------------------------------------------------------
 
 
+class _ViewerPointer:
+    """Follows the viewer-to-desk half of an RFB 3.8 session far enough to know which mouse buttons the
+    viewer holds and where its pointer is.
+
+    Why: Xvnc keeps one button state for all VNC clients and does not release it when a client goes away.
+    A viewer that drops mid-click (tab closed, network gone) leaves the button pressed on the desk, and from
+    then on the X server silently drops every click from other sources (xdotool, the MCP tools) until Xvnc
+    restarts. The proxy sees the viewer's last pointer event, so it can let go of the buttons itself.
+    """
+    _FIXED = {0: 20, 3: 10, 4: 8, 5: 6, 150: 10, 250: 4}  # message type -> length, from the RFB spec
+
+    def __init__(self):
+        self.buf = b""
+        self.stage = 0          # 0 version, 1 security choice, 2 ClientInit, 3 normal messages, -1 lost
+        self.mask = 0
+        self.x = self.y = 0
+
+    def _next_len(self):
+        b = self.buf
+        if self.stage == 0:
+            return 12
+        if self.stage in (1, 2):
+            return 1
+        if not b:
+            return None
+        t = b[0]
+        if t in self._FIXED:
+            return self._FIXED[t]
+        if t == 2:      # SetEncodings
+            return 4 + 4 * int.from_bytes(b[2:4], "big") if len(b) >= 4 else None
+        if t == 6:      # ClientCutText; a negative length is the extended form, same size on the wire
+            return 8 + abs(int.from_bytes(b[4:8], "big", signed=True)) if len(b) >= 8 else None
+        if t == 248:    # Fence
+            return 9 + b[8] if len(b) >= 9 else None
+        if t == 251:    # SetDesktopSize
+            return 8 + 16 * b[6] if len(b) >= 8 else None
+        if t == 255 and len(b) >= 2 and b[1] == 0:  # QEMU extended key event
+            return 12
+        self.stage = -1  # a message this tracker does not know: stop following, never guess
+        return None
+
+    def feed(self, data):
+        if self.stage < 0:
+            return
+        self.buf += data
+        while True:
+            n = self._next_len()
+            if n is None or len(self.buf) < n:
+                return
+            msg, self.buf = self.buf[:n], self.buf[n:]
+            if self.stage < 3:
+                self.stage += 1
+            elif msg[0] == 5:
+                self.mask = msg[1]
+                self.x, self.y = int.from_bytes(msg[2:4], "big"), int.from_bytes(msg[4:6], "big")
+
+
+async def _release_buttons(ip, x, y):
+    """Open a short shared VNC session and send a pointer event with no buttons at the viewer's last position
+    (so the pointer does not move). Security type None only, which is what the desks run."""
+    reader, writer = await asyncio.wait_for(asyncio.open_connection(ip, 5900), timeout=5)
+    try:
+        await asyncio.wait_for(reader.readexactly(12), 5)
+        writer.write(b"RFB 003.008\n")
+        n = (await asyncio.wait_for(reader.readexactly(1), 5))[0]
+        if 1 not in await asyncio.wait_for(reader.readexactly(n), 5):
+            raise RuntimeError("desk VNC needs a password")
+        writer.write(b"\x01")
+        await asyncio.wait_for(reader.readexactly(4), 5)
+        writer.write(b"\x01")   # ClientInit shared=1: other viewers stay connected
+        head = await asyncio.wait_for(reader.readexactly(24), 5)
+        await asyncio.wait_for(reader.readexactly(int.from_bytes(head[20:24], "big")), 5)
+        writer.write(bytes([5, 0]) + x.to_bytes(2, "big") + y.to_bytes(2, "big"))
+        await writer.drain()
+    finally:
+        writer.close()
+
+
 async def handle_ws_proxy(request: web.Request) -> web.WebSocketResponse:
     """WebSocket-to-TCP proxy for VNC and RDP.
 
@@ -154,6 +232,7 @@ async def handle_ws_proxy(request: web.Request) -> web.WebSocketResponse:
     t0 = time.time()
     stats = {"ws2tcp": 0, "tcp2ws": 0, "bytes_in": 0, "bytes_out": 0}
     tcp_writer = None
+    pointer = _ViewerPointer() if proto == "vnc" else None
 
     try:
         tcp_reader, tcp_writer = await asyncio.wait_for(
@@ -172,6 +251,8 @@ async def handle_ws_proxy(request: web.Request) -> web.WebSocketResponse:
                         stats["bytes_in"] += len(msg.data)
                         tcp_writer.write(msg.data)
                         await tcp_writer.drain()
+                        if pointer:
+                            pointer.feed(msg.data)
                     elif msg.type == WSMsgType.TEXT:
                         data = msg.data.encode()
                         stats["ws2tcp"] += 1
@@ -200,7 +281,13 @@ async def handle_ws_proxy(request: web.Request) -> web.WebSocketResponse:
             finally:
                 stop.set()
 
-        await asyncio.gather(ws_to_tcp(), tcp_to_ws())
+        # When one side ends, end the other: tcp_to_ws would otherwise sit in read() until the desk happens to
+        # send something, which on a still screen can be days, and the session (and its cleanup) never ends.
+        tasks = [asyncio.ensure_future(ws_to_tcp()), asyncio.ensure_future(tcp_to_ws())]
+        _, pending = await asyncio.wait(tasks, return_when=asyncio.FIRST_COMPLETED)
+        for t in pending:
+            t.cancel()
+        await asyncio.gather(*pending, return_exceptions=True)
 
     except ConnectionRefusedError:
         print(f"[{proto}-proxy] {desktop_id} REFUSED on port {target_port}", flush=True)
@@ -213,6 +300,15 @@ async def handle_ws_proxy(request: web.Request) -> web.WebSocketResponse:
     finally:
         if tcp_writer:
             tcp_writer.close()
+        if pointer and pointer.mask:
+            try:
+                await _release_buttons(container_ip, pointer.x, pointer.y)
+                print(f"[vnc-proxy] {desktop_id} viewer left with buttons held "
+                      f"(mask={pointer.mask}), released", flush=True)
+            except Exception as e:
+                print(f"[vnc-proxy] {desktop_id} RELEASE FAILED: {type(e).__name__}: {e}", flush=True)
+        elif pointer and pointer.stage < 0:
+            print(f"[vnc-proxy] {desktop_id} pointer tracking lost (unknown viewer message)", flush=True)
         elapsed = time.time() - t0
         print(f"[{proto}-proxy] {desktop_id} SESSION END: {elapsed:.1f}s "
               f"ws2tcp={stats['ws2tcp']} tcp2ws={stats['tcp2ws']} "

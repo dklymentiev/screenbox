@@ -1,5 +1,23 @@
 # Changelog
 
+## 0.16.1 (2026-11-12) -- Input reliability
+
+### Dashboard
+- **Mouse buttons no longer stick after a viewer drops** -- Xvnc keeps one button state for all VNC clients and does not release it when a client disconnects. A browser viewer closed mid-click left the button pressed, and the X server then dropped every click from other sources (xdotool, MCP tools) while motion and keys still worked. The VNC proxy now follows the viewer's pointer messages and, when a session ends with buttons held, sends a "no buttons" event at the same point.
+- **Proxy sessions end when either side closes** -- before, a session waited for the desktop to send data, so on a still screen it could linger for days and its cleanup never ran.
+- **Screenshot loop starts again** -- a relative import killed it at start, so every running desktop showed as "starting".
+- **Live view stays connected on "starting"** -- that state only means the dashboard has no screenshot of the desktop yet.
+
+### Packaging
+- **`mcp` pinned below 2.0** -- mcp 2.x renamed `FastMCP`, so a fresh install could not start the MCP server.
+
+### Tests
+- **Unit suite green again** -- 19 tests had drifted from the code (renamed tool, destroy keeping saved data, Docker pulled in through a module import); 369 pass.
+
+### WS bridge
+- **Dead controllers are dropped** -- a controller that vanished without a TCP close stayed registered; the list is now capped and checked, and TCP keepalive detects dead peers.
+- **Sends are capped at 5 s** -- one stalled client can no longer freeze the bridge lock for everyone.
+
 ## 0.16.0 (2026-03-29) -- Persistence & Cross-Platform Build
 
 ### Desktop Persistence
@@ -76,7 +94,7 @@
 
 ### Recordings
 - **Recordings in shared volume** -- FFmpeg writes to `desktops/{id}/recordings/`, dashboard reads same path
-- **Large screen guard** -- screens >1920x1080 get clear error instead of silent corrupt MP4 files (#728)
+- **Large screen guard** -- screens >1920x1080 get clear error instead of silent corrupt MP4 files
 - **Dashboard recording routes** -- backward compatible, checks new and old paths
 
 ### Fixes
@@ -87,28 +105,28 @@
 ## 0.13.6 (2026-03-18) -- Security hardening, desktop lock, browser detect
 
 ### Security (Incident Response)
-- **Destroy/pause/resume require authentication** -- unauthenticated requests blocked (#718)
-- **Desktop lock/unlock** -- protect desktops from accidental deletion. Lock requires auth, unlock requires admin (#707)
-- **Source IP in action logs** -- every tool call logs client IP for forensics (#719)
-- **Snapshot verification** -- `snapshot_saved` now checks file exists, not just request parameter (#715)
+- **Destroy/pause/resume require authentication** -- unauthenticated requests blocked
+- **Desktop lock/unlock** -- protect desktops from accidental deletion. Lock requires auth, unlock requires admin
+- **Source IP in action logs** -- every tool call logs client IP for forensics
+- **Snapshot verification** -- `snapshot_saved` now checks file exists, not just request parameter
 
 ### Browser
-- **Auto-detect Google Chrome vs Chromium** in entrypoint.sh and start-chrome.sh (#714)
+- **Auto-detect Google Chrome vs Chromium** in entrypoint.sh and start-chrome.sh
 - **Removed Chrome restrictions** -- no more --disable-sync, --disable-extensions-except
 - **Extension symlink on Desktop** for manual Chrome install (Load unpacked)
 - **pgrep checks both chromium and chrome** process names
 
 ### Infrastructure
 - **Auto-snapshot every 15 min** for running desktops (config: auto_snapshot_minutes=15)
-- **Disk usage via manager.exec** instead of docker CLI subprocess (#693)
+- **Disk usage via manager.exec** instead of docker CLI subprocess
 
 ## 0.13.5 (2026-03-18) -- Stateless sessions, Docker sync, stability
 
 ### Critical Fixes
-- **Stateless HTTP sessions** (`stateless_http=True`) -- MCP restart no longer kills agent sessions (#701)
-- **Periodic Docker sync** every 30s -- removes ghost desktops from dashboard, updates states (#708)
-- **VNC reconnect** skips non-running desktops -- no more infinite reconnect loops (#698)
-- **Knowledge search** returns full fact texts on empty query + fallback to global knowledge (#700)
+- **Stateless HTTP sessions** (`stateless_http=True`) -- MCP restart no longer kills agent sessions
+- **Periodic Docker sync** every 30s -- removes ghost desktops from dashboard, updates states
+- **VNC reconnect** skips non-running desktops -- no more infinite reconnect loops
+- **Knowledge search** returns full fact texts on empty query + fallback to global knowledge
 - **SECURITY.md** added with vulnerability reporting policy and security architecture
 
 ### Per-component versioning
@@ -126,9 +144,9 @@
 - Demo Form Filling flow updated with explicit submit step
 
 ### Known Issues
-- VNC WebSocket reconnect loop on dashboard (#698)
-- Desktop create timeout for remote agents (#699)
-- Knowledge list_all doesn't fallback to global flows (#700)
+- VNC WebSocket reconnect loop on dashboard
+- Desktop create timeout for remote agents
+- Knowledge list_all doesn't fallback to global flows
 
 ## 0.13.3 (2026-03-17) -- Dashboard screenshot fix, unified architecture
 

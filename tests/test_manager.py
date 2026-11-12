@@ -135,7 +135,8 @@ class TestDesktopManager:
              patch("subprocess.run") as mock_run:
             mock_run.return_value = MagicMock(returncode=0, stdout="", stderr="")
             assert manager.destroy("temp") is True
-            assert manager.get("temp") is None
+            # destroy removes the container but keeps the data: the desktop stays listed as saved
+            assert manager.get("temp").state == DesktopState.SAVED
 
     def test_destroy_nonexistent(self, manager):
         assert manager.destroy("nonexistent") is False

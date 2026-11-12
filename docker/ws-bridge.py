@@ -32,6 +32,7 @@ import select
 from urllib.parse import urlparse, parse_qs
 
 PORT = int(sys.argv[1]) if len(sys.argv) > 1 else 8765
+MAX_CONTROLLERS = 8
 # Authentication token: if set, clients must include ?token=<value> in WebSocket URL
 WS_TOKEN = os.environ.get("SCREENBOX_WS_TOKEN", "")
 log.info("WS_TOKEN configured: %s (len=%d)", "yes" if WS_TOKEN else "no", len(WS_TOKEN))
@@ -221,6 +222,11 @@ class Bridge:
                 log.info("Extension connected")
             else:
                 ws.role = 'controller'
+                # A controller that vanished without a TCP close used to stay here forever; forget the
+                # dead ones and keep the list bounded so the bridge cannot choke on stale entries.
+                self.controllers = [c for c in self.controllers if not c.closed]
+                while len(self.controllers) >= MAX_CONTROLLERS:
+                    self.controllers.pop(0).close()
                 self.controllers.append(ws)
                 log.info("Controller connected (total: %d)", len(self.controllers))
 
@@ -333,6 +339,15 @@ def main():
     try:
         while True:
             client_sock, addr = server.accept()
+            # Detect peers that died without closing (about 60 s): recv() then fails and the handler unregisters them.
+            client_sock.setsockopt(socket.SOL_SOCKET, socket.SO_KEEPALIVE, 1)
+            client_sock.setsockopt(socket.IPPROTO_TCP, socket.TCP_KEEPIDLE, 30)
+            client_sock.setsockopt(socket.IPPROTO_TCP, socket.TCP_KEEPINTVL, 10)
+            client_sock.setsockopt(socket.IPPROTO_TCP, socket.TCP_KEEPCNT, 3)
+            # A peer that stops reading must not freeze the bridge: sends happen while the bridge lock is held, so a
+            # blocking send to one stalled client froze every command for every client. Cap a send at 5 s (SO_SNDTIMEO
+            # affects sends only, reads stay blocking); send() then marks that client closed.
+            client_sock.setsockopt(socket.SOL_SOCKET, socket.SO_SNDTIMEO, struct.pack('ll', 5, 0))
             t = threading.Thread(target=handle_client, args=(client_sock, addr), daemon=True)
             t.start()
     except KeyboardInterrupt:

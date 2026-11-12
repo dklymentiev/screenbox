@@ -417,7 +417,8 @@ class TestDesktop:
 
     def test_navigate_extension_fallback(self, desktop, mock_manager):
         """Test that navigate falls back to xdotool when extension fails."""
-        mock_manager.exec.return_value = MagicMock(returncode=0, stdout=b"", stderr=b"")
+        # navigate checks the browser runs (pgrep) before the fallback, so the shell answers with a pid
+        mock_manager.exec.return_value = MagicMock(returncode=0, stdout=b"4242\n", stderr=b"")
         # Extension will fail (no real WS server)
         result = desktop.navigate("https://test.com")
         assert result["method"] == "xdotool"
